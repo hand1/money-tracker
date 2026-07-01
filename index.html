@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F0FDF4; }
+        .tab-content { display: none; }
+        .active-tab { display: block; }
+        .card { background: white; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(22, 101, 52, 0.08); }
+        .gradient-green { background: linear-gradient(135deg, #16a34a, #14532d); }
+        
+        /* Warna dinamis saat radio button aktif */
+        #inc:checked + label { background-color: #16a34a; color: white; border-color: #16a34a; }
+        #exp:checked + label { background-color: #dc2626; color: white; border-color: #dc2626; }
+
+        /* Animasi getar untuk error pin */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .shake-effect {
+            animation: shake 0.2s ease-in-out 0s 2;
+        }
+
+        /* RESET DROP DOWN KHUSUS UNTUK ANDROID & SMARTPHONE LAINNYA */
+        select {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-image: none !important;
+            background-color: #ffffff !important;
+        }
+        /* Menyembunyikan panah bawaan Internet Explorer / Edge */
+        select::-ms-expand {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="pb-28">
+    <!-- Overlay Spinner Loader Solid untuk Mencegah Kebocoran Tampilan Sebelum Verifikasi Database Selesai -->
+    <div id="globalLoader" class="fixed inset-0 bg-emerald-900 z-[250] flex flex-col justify-center items-center text-white font-semibold gap-3">
+        <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <p id="loaderText" class="text-xs tracking-wider animate-pulse">Loading...</p>
+    </div>
+
+    <div id="app" class="max-w-md mx-auto min-h-screen bg-gray-50 shadow-2xl overflow-hidden relative">
+        
+        <!-- Halaman Kunci PIN Overlay (Tampil default tanpa class "hidden" saat inisialisasi awal) -->
+        <div id="pinLockScreen" class="absolute inset-0 bg-gray-900 z-[100] flex flex-col justify-between p-6 pb-3 text-white transition-all duration-300">
+            
+            <!-- Pembungkus Utama untuk Merapatkan Jarak Header & Keypad secara Responsif -->
+            <div class="flex-1 flex flex-col justify-center items-center space-y-6 my-auto w-full max-w-xs mx-auto">
+                
+                <!-- Header Kunci -->
+                <div class="flex flex-col items-center space-y-3 text-center">
+                    <div class="w-14 h-14 bg-emerald-600/20 rounded-full flex items-center justify-center border border-emerald-500/30 text-2xl">
+                        🔒
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-emerald-400">Aplikasi Terkunci</h3>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Masukkan 4-Digit PIN untuk melanjutkan</p>
+                    </div>
+                    
+                    <!-- Indikator PIN Dots -->
+                    <div class="flex gap-3.5 pt-1.5" id="pinDotsContainer">
+                        <span class="w-3.5 h-3.5 rounded-full border-2 border-gray-500 bg-transparent transition-all duration-150"></span>
+                        <span class="w-3.5 h-3.5 rounded-full border-2 border-gray-500 bg-transparent transition-all duration-150"></span>
+                        <span class="w-3.5 h-3.5 rounded-full border-2 border-gray-500 bg-transparent transition-all duration-150"></span>
+                        <span class="w-3.5 h-3.5 rounded-full border-2 border-gray-500 bg-transparent transition-all duration-150"></span>
+                    </div>
+                    
+                    <!-- Feedback pesan error -->
+                    <p id="pinErrorMsg" class="text-[11px] text-rose-400 font-semibold h-4 opacity-0 transition-opacity duration-150 mt-1">PIN Salah, silakan coba lagi</p>
+                </div>
+
+                <!-- Keypad PIN Pad -->
+                <div class="w-full space-y-2">
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button type="button" onclick="addLockPin('1')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">1</button>
+                        <button type="button" onclick="addLockPin('2')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">2</button>
+                        <button type="button" onclick="addLockPin('3')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">3</button>
+                        
+                        <button type="button" onclick="addLockPin('4')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">4</button>
+                        <button type="button" onclick="addLockPin('5')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">5</button>
+                        <button type="button" onclick="addLockPin('6')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">6</button>
+                        
+                        <button type="button" onclick="addLockPin('7')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">7</button>
+                        <button type="button" onclick="addLockPin('8')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">8</button>
+                        <button type="button" onclick="addLockPin('9')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">9</button>
+                        
+                        <button type="button" onclick="clearLockPin()" class="py-3.5 bg-red-950/40 text-red-400 rounded-2xl font-bold text-base active:scale-95 transition shadow-md">C</button>
+                        <button type="button" onclick="addLockPin('0')" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">0</button>
+                        <button type="button" onclick="backspaceLockPin()" class="py-3.5 bg-gray-800/80 rounded-2xl font-bold text-lg active:scale-95 transition shadow-md">⌫</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kredit Aplikasi di Bagian Paling Bawah Layar Kunci PIN -->
+            <div class="text-center text-[10px] text-gray-500 pt-3 pb-1 border-t border-gray-800/30 mt-4 shrink-0">
+                Money Tracker App v1.0.0. Developed by Handy
+            </div>
+        </div>
+
+        <!-- Home Tab -->
+        <div id="homeView" class="tab-content active-tab">
+            <!-- Header Profil & Nama Pengguna -->
+            <div class="bg-white px-6 pt-6 pb-2 flex justify-between items-center border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <!-- Foto Profil Berbasis Inisial -->
+                    <div onclick="openSettings()" class="w-10 h-10 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center cursor-pointer shadow-md hover:scale-105 transition duration-300" id="profileAvatar">
+                        H
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Selamat Datang</p>
+                        <h4 class="text-sm font-bold text-gray-800" id="profileName">Loading...</h4>
+                    </div>
+                </div>
+                
+                <!-- Grup Tombol Aksi Kanan -->
+                <div class="flex items-center gap-2">
+                    <!-- Tombol Logout (Muncul hanya jika PIN aktif) -->
+                    <button id="logoutBtn" onclick="logoutApp()" class="hidden text-gray-400 hover:text-red-500 p-2 hover:bg-gray-100 rounded-xl transition" title="Kunci Aplikasi">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                    <!-- Tombol Pengaturan Cepat -->
+                    <button onclick="openSettings()" class="text-gray-400 hover:text-emerald-600 p-2 hover:bg-gray-100 rounded-xl transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header Utama Dashboard -->
+            <div class="gradient-green p-6 pb-6 text-white rounded-b-[32px] shadow-lg">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-green-100 text-[10px] uppercase tracking-widest font-bold opacity-80">Total Saldo</p>
+                        <h1 id="headerTotalSaldo" class="text-3xl font-extrabold mt-0.5 tracking-tight">Rp 0</h1>
+                    </div>
+                    <span onclick="showHealthAnalysis()" id="headerStatusBadge" class="bg-white/10 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full border border-white/10 uppercase tracking-wider backdrop-blur-md cursor-pointer hover:bg-white/20 transition duration-150" title="Klik untuk analisis kesehatan keuangan">
+                        Sehat 🟢
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-5 text-xs">
+                    <!-- Pemasukan -->
+                    <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/10 flex flex-col justify-between">
+                        <span class="text-green-200 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                            Masuk
+                        </span>
+                        <p id="totalPemasukanHeader" class="text-xs font-extrabold text-emerald-300 mt-1">Rp 0</p>
+                    </div>
+                    <!-- Pengeluaran -->
+                    <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/10 flex flex-col justify-between">
+                        <span class="text-green-200 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-rose-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="7" x2="7" y2="17"></line><polyline points="17 17 7 17 7 7"></polyline></svg>
+                            Keluar
+                        </span>
+                        <p id="totalPengeluaranHeader" class="text-xs font-extrabold text-rose-300 mt-1">Rp 0</p>
+                    </div>
+                </div>
+
+                <!-- Rasio Budget Dinamis -->
+                <div class="mt-4 bg-white/5 p-2.5 rounded-2xl border border-white/5 text-[10px] flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-1.5 whitespace-nowrap font-bold text-green-100">
+                        <span id="headerSavingsRatioText">Rasio: 0%</span>
+                        <span id="headerStatusText" class="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded-full text-emerald-300">Aman</span>
+                    </div>
+                    <div class="flex-1 bg-white/20 h-1.5 rounded-full overflow-hidden">
+                        <div id="headerProgressBar" class="bg-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Konten Utama Dashboard -->
+            <div class="p-5 space-y-5">
+                <div class="card p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wider">Top Pengeluaran</h3>
+                        <span id="topCategoryLabel" class="text-[9px] bg-red-100 text-red-700 font-extrabold px-2 py-0.5 rounded-full">- 🔥</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-[45%] h-28 relative">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                        <div id="chartLegendContainer" class="w-[55%] text-[10px] space-y-2 text-gray-600"></div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <h2 class="font-bold text-gray-800 text-md">Riwayat Terakhir</h2>
+                        <div class="flex gap-1 text-[10px]">
+                            <button onclick="changePage(-1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">◀</button>
+                            <span id="pageInfo" class="p-1.5 font-bold text-gray-700">1/1</span>
+                            <button onclick="changePage(1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">▶</button>
+                        </div>
+                    </div>
+
+                    <!-- Form Pencarian Dinamis -->
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-xs text-gray-400">
+                            🔍
+                        </span>
+                        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cari transaksi berdasarkan nama atau kategori..." class="w-full pl-9 pr-4 py-2.5 bg-white rounded-2xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition duration-300">
+                    </div>
+                    
+                    <div id="activityList" class="space-y-2.5"></div>
+                </div>
+
+                <!-- Kredit Aplikasi -->
+                <div class="text-center text-[10px] text-gray-400 pt-4 pb-2 border-t border-gray-100">
+                    Money Tracker App v1.0.0. Developed by Handy
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Tab -->
+        <div id="addView" class="tab-content p-6">
+            <h2 class="font-bold text-xl mb-6 text-gray-800">Tambah Transaksi</h2>
+            <form id="transForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="radio" name="jenis" id="inc" value="Pemasukan" class="hidden option-input" checked onchange="updateCategories()">
+                    <label for="inc" class="card p-4 text-center cursor-pointer border-2 border-transparent hover:border-green-200 transition font-bold text-sm text-gray-700">Pemasukan</label>
+                    
+                    <input type="radio" name="jenis" id="exp" value="Pengeluaran" class="hidden option-input" onchange="updateCategories()">
+                    <label for="exp" class="card p-4 text-center cursor-pointer border-2 border-transparent hover:border-red-200 transition font-bold text-sm text-gray-700">Pengeluaran</label>
+                </div>
+                
+                <input type="date" id="dateInput" class="w-full p-4 card border-none outline-none text-gray-700" required>
+                <!-- Elemen Dropdown Kategori Teroptimasi Kustom untuk Mobile Android -->
+                <div class="relative">
+                    <select id="kategori" class="w-full p-4 pr-10 card border-none outline-none text-gray-700 appearance-none bg-white cursor-pointer"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                <input type="text" id="keteranganInput" placeholder="Keterangan (Opsional)" class="w-full p-4 card border-none outline-none text-gray-700">
+                
+                <div class="card p-6 bg-gray-900 text-white">
+                    <div id="calcDisplay" class="text-3xl font-bold text-green-400 text-right mb-4">0</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="addNum('1')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">1</button>
+                        <button type="button" onclick="addNum('2')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">2</button>
+                        <button type="button" onclick="addNum('3')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">3</button>
+                        <button type="button" onclick="addNum('4')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">4</button>
+                        <button type="button" onclick="addNum('5')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">5</button>
+                        <button type="button" onclick="addNum('6')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">6</button>
+                        <button type="button" onclick="addNum('7')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">7</button>
+                        <button type="button" onclick="addNum('8')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">8</button>
+                        <button type="button" onclick="addNum('9')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">9</button>
+                        <button type="button" onclick="clearNum()" class="p-4 bg-red-900/50 text-red-400 rounded-2xl font-bold text-lg hover:bg-red-900/70">C</button>
+                        <button type="button" onclick="addNum('0')" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">0</button>
+                        <button type="button" onclick="backspace()" class="p-4 bg-gray-800 rounded-2xl font-bold text-lg hover:bg-gray-700">⌫</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full gradient-green text-white p-4 rounded-2xl font-bold shadow-lg shadow-green-900/20 hover:opacity-95 transition">Simpan</button>
+            </form>
+            
+            <!-- Kredit Aplikasi -->
+            <div class="text-center text-[10px] text-gray-400 pt-8 pb-2 border-t border-gray-100 mt-6">
+                Money Tracker App v1.0.0. Developed by Handy
+            </div>
+        </div>
+
+        <!-- Insight Tab -->
+        <div id="insightView" class="tab-content p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-bold text-xl text-gray-800">Laporan Analisis</h2>
+                <button onclick="exportToPDF()" class="bg-green-600 text-white text-xs px-4 py-2 rounded-2xl font-bold shadow-md hover:bg-green-700 transition">📄 Export PDF</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Bulan</label>
+                    <!-- Dropdown Bulan Teroptimasi Android -->
+                    <div class="relative">
+                        <select id="filterMonth" onchange="resetInsightAndRender()" class="w-full p-4 pr-10 card border-none outline-none text-gray-700 text-sm appearance-none bg-white cursor-pointer">
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07" selected>Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tahun</label>
+                    <!-- Dropdown Tahun Teroptimasi Android -->
+                    <div class="relative">
+                        <select id="filterYear" onchange="resetInsightAndRender()" class="w-full p-4 pr-10 card border-none outline-none text-gray-700 text-sm appearance-none bg-white cursor-pointer">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pdfContainer" class="space-y-6">
+                <div class="card p-5">
+                    <h3 class="font-bold text-gray-800 mb-4 text-center text-sm">Rasio Pemasukan vs Pengeluaran</h3>
+                    <div class="h-48 flex justify-center items-center">
+                        <canvas id="insightComparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bagian Detail Kategori dengan Fitur Pencarian & Pagination Tambahan -->
+                <div class="card p-5 overflow-hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h3 class="font-bold text-gray-800 text-sm">Detail Kategori</h3>
+                        <!-- Form Pencarian Tabel Insight -->
+                        <div class="relative w-full sm:w-48">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-xs text-gray-400">
+                                🔍
+                            </span>
+                            <input type="text" id="insightSearchInput" oninput="handleInsightSearch()" placeholder="Cari..." class="w-full pl-7 pr-3 py-1.5 bg-gray-50 rounded-xl text-xs font-semibold outline-none text-gray-700 border border-gray-100 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition duration-300">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100 text-xs font-bold text-gray-400 uppercase">
+                                    <th class="py-3">Kategori</th>
+                                    <th class="py-3">Jenis</th>
+                                    <th class="py-3 text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="insightTableBody" class="text-sm divide-y divide-gray-50 text-gray-700"></tbody>
+                        </table>
+                    </div>
+                    <!-- Navigasi Halaman (Pagination) untuk Detail Kategori -->
+                    <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 text-[10px]">
+                        <span id="insightPageInfo" class="font-bold text-gray-500">Halaman 1 dari 1</span>
+                        <div class="flex gap-1">
+                            <button onclick="changeInsightPage(-1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">◀</button>
+                            <button onclick="changeInsightPage(1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">▶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kredit Aplikasi -->
+            <div class="text-center text-[10px] text-gray-400 pt-8 pb-2 border-t border-gray-100 mt-6">
+                Money Tracker App v1.0.0. Developed by Handy
+            </div>
+        </div>
+
+        <!-- Tab Baru: Kantong Tabungan (Savings Pocket) -->
+        <div id="pocketView" class="tab-content p-6">
+            <h2 class="font-bold text-xl mb-4 text-gray-800">Kantong Tabungan</h2>
+            
+            <!-- Form CRUD Kantong -->
+            <div class="card p-4 mb-6 space-y-3">
+                <h4 class="text-xs font-extrabold text-gray-400 uppercase tracking-widest" id="pocketFormTitle">Tambah Kantong Baru</h4>
+                <input id="pocketName" type="text" placeholder="Nama Kantong (e.g. Dana Darurat)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="pocketTarget" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="Target Dana (Rp)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
+                    <input id="pocketSaved" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="Dana Terkumpul (Rp)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
+                </div>
+                <button onclick="savePocket()" class="w-full gradient-green text-white p-3 rounded-xl font-bold text-xs shadow">Simpan Kantong</button>
+            </div>
+
+            <!-- List Kantong -->
+            <div id="pocketList" class="space-y-3"></div>
+            
+            <!-- Kredit Aplikasi -->
+            <div class="text-center text-[10px] text-gray-400 pt-8 pb-2 border-t border-gray-100 mt-6">
+                Money Tracker App v1.0.0. Developed by Handy
+            </div>
+        </div>
+
+        <!-- Tab Baru: Budgeting -->
+        <div id="budgetView" class="tab-content p-6">
+            <h2 class="font-bold text-xl mb-4 text-gray-800">Alokasi Anggaran</h2>
+            
+            <!-- Form Set Anggaran -->
+            <div class="card p-4 mb-6 space-y-3">
+                <h4 class="text-xs font-extrabold text-gray-400 uppercase tracking-widest" id="budgetFormTitle">Atur Batas Anggaran</h4>
+                <!-- Dropdown Kategori Anggaran Teroptimasi Android -->
+                <div class="relative">
+                    <select id="budgetCategory" class="w-full p-3 pr-10 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100 appearance-none bg-white cursor-pointer"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                <input id="budgetLimit" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="Batas Limit Anggaran Bulanan (Rp)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
+                <button onclick="saveBudget()" class="w-full gradient-green text-white p-3 rounded-xl font-bold text-xs shadow">Simpan Batas Anggaran</button>
+            </div>
+
+            <!-- Progress List Anggaran Dinamis -->
+            <div id="budgetList" class="space-y-3"></div>
+            
+            <!-- Kredit Aplikasi -->
+            <div class="text-center text-[10px] text-gray-400 pt-8 pb-2 border-t border-gray-100 mt-6">
+                Money Tracker App v1.0.0. Developed by Handy
+            </div>
+        </div>
+
+        <!-- Modal Pengaturan Profil & Kelola Kategori -->
+        <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end justify-center transition-opacity duration-300">
+            <div class="bg-white w-full max-w-md rounded-t-[40px] p-6 space-y-6 max-h-[85vh] overflow-y-auto shadow-2xl">
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                    <h3 class="font-extrabold text-lg text-gray-800">⚙️ Pengaturan</h3>
+                    <button onclick="closeSettings()" class="text-gray-400 hover:text-red-500 font-bold text-xl">✕</button>
+                </div>
+
+                <!-- Bagian 1: Edit Username -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Pengguna</label>
+                    <div class="flex gap-2">
+                        <input id="usernameInput" type="text" placeholder="Masukkan nama..." class="flex-1 p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm font-semibold outline-none text-gray-700">
+                        <button onclick="saveUsername()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Simpan</button>
+                    </div>
+                </div>
+
+                <!-- Bagian BARU: Aktivasi PIN Keamanan -->
+                <div class="space-y-2 border-t border-gray-100 pt-4">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Aktivasi PIN Keamanan</label>
+                        <!-- Switch Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="pinToggle" class="sr-only peer" onchange="togglePinSetting()">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+                    <!-- Area Konfigurasi PIN -->
+                    <div id="pinConfigArea" class="hidden space-y-3 mt-2 bg-gray-50 p-4 rounded-3xl border border-gray-100 transition-all duration-300">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Atur 4-Digit PIN</label>
+                        <div class="flex gap-2">
+                            <input id="pinInputVal" type="password" maxlength="4" placeholder="••••" class="flex-1 p-3 bg-white rounded-xl border border-gray-100 text-sm font-semibold text-center tracking-widest outline-none text-gray-700" oninput="this.value = this.value.replace(/\D/g, '')">
+                            <button onclick="savePin()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Simpan PIN</button>
+                        </div>
+                        <p class="text-[9px] text-gray-400 font-semibold">PIN Default bawaan adalah: <span class="text-emerald-600 font-extrabold">1234</span></p>
+                    </div>
+                </div>
+
+                <!-- Bagian 2: Kelola Kategori -->
+                <div class="space-y-4 border-t border-gray-100 pt-4">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Kelola Kategori Keuangan</label>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-3xl space-y-3 border border-gray-100">
+                        <input id="catName" type="text" placeholder="Nama Kategori Baru" class="w-full p-3 bg-white rounded-xl border border-gray-100 text-xs outline-none text-gray-700">
+                        <!-- Dropdown Kategori Baru Teroptimasi Android -->
+                        <div class="relative">
+                            <select id="catType" class="w-full p-3 pr-10 bg-white rounded-xl border border-gray-100 text-xs outline-none text-gray-700 appearance-none cursor-pointer">
+                                <option value="Pemasukan">Pemasukan</option>
+                                <option value="Pengeluaran">Pengeluaran</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                        <button onclick="saveCategory()" class="w-full gradient-green text-white p-3 rounded-xl font-bold text-xs shadow">Simpan Kategori</button>
+                    </div>
+                    <!-- Daftar Kategori dengan Tombol Edit & Hapus -->
+                    <div id="catList" class="space-y-2 max-h-[250px] overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigasi Bawah -->
+        <div id="bottomNav" class="fixed bottom-6 left-6 right-6 max-w-md mx-auto bg-gray-900 text-white rounded-3xl p-3 flex justify-around items-center shadow-2xl z-50">
+            <button onclick="switchTab('homeView')" class="p-2 transition active:scale-95 text-xl">🏠</button>
+            <button onclick="switchTab('insightView')" class="p-2 transition active:scale-95 text-xl">📈</button>
+            <button onclick="switchTab('addView')" class="bg-green-600 w-12 h-12 rounded-full font-bold text-white shadow-lg active:scale-95 text-2xl flex items-center justify-center">+</button>
+            <button onclick="switchTab('pocketView')" class="p-2 transition active:scale-95 text-xl">💼</button>
+            <button onclick="switchTab('budgetView')" class="p-2 transition active:scale-95 text-xl">🎯</button>
+        </div>
+    </div>
+
+    <script>
+        // MOCK INTERFACE UNTUK GOOGLE APPS SCRIPT (Ditambah penyimpanan LocalStorage agar tangguh saat refresh di Canvas)
+        if (typeof google === 'undefined' || !google.script) {
+            console.warn("Aplikasi berjalan di luar lingkungan Google Apps Script. Beralih ke mode simulasi lokal dengan LocalStorage.");
+            window.google = {
+                script: {
+                    run: {
+                        withSuccessHandler: function(onSuccess) {
+                            return {
+                                withFailureHandler: function(onFailure) {
+                                    return {
+                                        loadAllData: function() {
+                                            setTimeout(() => onSuccess(getMockAllData()), 800);
+                                        },
+                                        addTransaction: function(date, category, amount, type, description) {
+                                            setTimeout(() => {
+                                                const newTx = {
+                                                    id: "TX" + new Date().getTime(),
+                                                    tanggal: date,
+                                                    kategori: category,
+                                                    jumlah: amount,
+                                                    type: type,
+                                                    nama: description || category
+                                                };
+                                                data.unshift(newTx);
+                                                localStorage.setItem('money_tracker_mock_data', JSON.stringify(data));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        addCategory: function(type, name) {
+                                            setTimeout(() => {
+                                                categories[type].push(name);
+                                                localStorage.setItem('money_tracker_mock_categories', JSON.stringify(categories));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        updateCategory: function(type, oldName, newName) {
+                                            setTimeout(() => {
+                                                const idx = categories[type].indexOf(oldName);
+                                                if (idx > -1) categories[type][idx] = newName;
+                                                localStorage.setItem('money_tracker_mock_categories', JSON.stringify(categories));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        deleteCategory: function(type, name) {
+                                            setTimeout(() => {
+                                                const idx = categories[type].indexOf(name);
+                                                if (idx > -1) categories[type].splice(idx, 1);
+                                                localStorage.setItem('money_tracker_mock_categories', JSON.stringify(categories));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        savePocket: function(id, name, target, saved) {
+                                            setTimeout(() => {
+                                                if (id) {
+                                                    const p = pockets.find(pk => pk.id === id);
+                                                    if (p) {
+                                                        p.nama = name;
+                                                        p.target = target;
+                                                        p.terkumpul = saved;
+                                                    }
+                                                } else {
+                                                    pockets.push({
+                                                        id: "PK" + new Date().getTime(),
+                                                        nama: name,
+                                                        target: target,
+                                                        terkumpul: saved
+                                                    });
+                                                }
+                                                localStorage.setItem('money_tracker_mock_pockets', JSON.stringify(pockets));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        deletePocket: function(id) {
+                                            setTimeout(() => {
+                                                pockets = pockets.filter(pk => pk.id !== id);
+                                                localStorage.setItem('money_tracker_mock_pockets', JSON.stringify(pockets));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        saveBudget: function(category, limit) {
+                                            setTimeout(() => {
+                                                const b = budgets.find(bg => bg.kategori === category);
+                                                if (b) {
+                                                    b.limit = limit;
+                                                } else {
+                                                    budgets.push({ kategori: category, limit: limit });
+                                                }
+                                                localStorage.setItem('money_tracker_mock_budgets', JSON.stringify(budgets));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        deleteBudget: function(category) {
+                                            setTimeout(() => {
+                                                budgets = budgets.filter(bg => bg.kategori !== category);
+                                                localStorage.setItem('money_tracker_mock_budgets', JSON.stringify(budgets));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        },
+                                        updateSetting: function(key, value) {
+                                            setTimeout(() => {
+                                                if (key === 'username') currentUsername = value;
+                                                if (key === 'isPinEnabled') isPinEnabled = (value === 'true' || value === true);
+                                                if (key === 'savedPin') savedPin = String(value);
+
+                                                const settings = {
+                                                    username: currentUsername,
+                                                    isPinEnabled: String(isPinEnabled),
+                                                    savedPin: savedPin
+                                                };
+                                                localStorage.setItem('money_tracker_mock_settings', JSON.stringify(settings));
+                                                onSuccess({ success: true });
+                                            }, 400);
+                                        }
+                                    };
+                                }
+                            };
+                        }
+                    }
+                }
+            };
+        }
+
+        // Generator Data Simulasi Presisten / Mock Data dengan LocalStorage Fallback
+        function getMockAllData() {
+            let localData = localStorage.getItem('money_tracker_mock_data');
+            let localSettings = localStorage.getItem('money_tracker_mock_settings');
+            let localPockets = localStorage.getItem('money_tracker_mock_pockets');
+            let localBudgets = localStorage.getItem('money_tracker_mock_budgets');
+            let localCategories = localStorage.getItem('money_tracker_mock_categories');
+
+            if (localData) {
+                data = JSON.parse(localData);
+            } else {
+                const tempCategories = { 
+                    "Pemasukan": ["Gaji", "Bonus", "Investasi", "Deposito", "Dividen", "Lain-lain"], 
+                    "Pengeluaran": ["Makan", "Transport", "Sewa Rumah", "Bensin", "Belanja", "Asuransi", "Kesehatan", "Lain-lain"] 
+                };
+                const tempMonths = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+                const tempYears = ["2024", "2025", "2026"];
+                data = Array.from({length: 50}, (_, i) => {
+                    const year = tempYears[i % tempYears.length];
+                    const month = tempMonths[Math.floor(Math.random() * tempMonths.length)];
+                    const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+                    const isIncome = i % 3 === 0;
+                    const type = isIncome ? 'Pemasukan' : 'Pengeluaran';
+                    const categoryList = tempCategories[type];
+                    const category = categoryList[Math.floor(Math.random() * categoryList.length)];
+                    
+                    return {
+                        id: "TX" + i,
+                        nama: category + " " + (i + 1),
+                        jumlah: (Math.floor(Math.random() * 50) + 1) * 20000,
+                        tanggal: `${year}-${month}-${day}`,
+                        type: type,
+                        kategori: category
+                    };
+                });
+                localStorage.setItem('money_tracker_mock_data', JSON.stringify(data));
+            }
+
+            if (localCategories) {
+                categories = JSON.parse(localCategories);
+            } else {
+                categories = { 
+                    "Pemasukan": ["Gaji", "Bonus", "Investasi", "Deposito", "Dividen", "Lain-lain"], 
+                    "Pengeluaran": ["Makan", "Transport", "Sewa Rumah", "Bensin", "Belanja", "Asuransi", "Kesehatan", "Lain-lain"] 
+                };
+                localStorage.setItem('money_tracker_mock_categories', JSON.stringify(categories));
+            }
+
+            if (localPockets) {
+                pockets = JSON.parse(localPockets);
+            } else {
+                pockets = [
+                    { id: "PK1", nama: "Dana Darurat", target: 10000000, terkumpul: 4500000 },
+                    { id: "PK2", nama: "Liburan Baru", target: 5000000, terkumpul: 1200000 }
+                ];
+                localStorage.setItem('money_tracker_mock_pockets', JSON.stringify(pockets));
+            }
+
+            if (localBudgets) {
+                budgets = JSON.parse(localBudgets);
+            } else {
+                budgets = [
+                    { kategori: "Makan", limit: 1000000 },
+                    { kategori: "Transport", limit: 500000 }
+                ];
+                localStorage.setItem('money_tracker_mock_budgets', JSON.stringify(budgets));
+            }
+
+            let settings = {
+                username: "Handy",
+                isPinEnabled: "false",
+                savedPin: "1234"
+            };
+
+            if (localSettings) {
+                settings = JSON.parse(localSettings);
+                currentUsername = settings.username;
+                isPinEnabled = String(settings.isPinEnabled).toLowerCase() === "true"; // FIX: Konversi aman string/boolean
+                savedPin = String(settings.savedPin); // FIX: Memastikan bertipe String
+            } else {
+                localStorage.setItem('money_tracker_mock_settings', JSON.stringify(settings));
+            }
+
+            return {
+                transaksi: data,
+                kategori: categories,
+                pockets: pockets,
+                budgets: budgets,
+                settings: settings
+            };
+        }
+
+        // State Global Aplikasi
+        let currentNum = "0", editIndex = -1, editType = "";
+        let editPocketIndex = -1;
+        let editBudgetIndex = -1;
+        let currentUsername = "Handy";
+        let editPocketId = null;
+
+        // Fitur PIN Keamanan Variables
+        let isPinEnabled = false;
+        let isUserUnlocked = false; // Flag status apakah pengguna telah berhasil melewati login PIN
+        let savedPin = "1234";
+        let enteredPinVal = "";
+
+        // Placeholder State Kosong
+        let categories = { "Pemasukan": [], "Pengeluaran": [] };
+        let pockets = [];
+        let budgets = [];
+        let data = [];
+
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let mainChart = null;
+        let insightChart = null;
+
+        // State Pagination dan Filter Pencarian Khusus Laporan/Insight
+        let insightCurrentPage = 1;
+        const insightItemsPerPage = 5;
+
+        // Tampilkan/Sembunyikan Loader Overlay dengan representasi teks dinamis
+        function showLoader(text) {
+            document.getElementById('loaderText').innerText = text;
+            document.getElementById('globalLoader').classList.remove('hidden');
+        }
+        function hideLoader() {
+            document.getElementById('globalLoader').classList.add('hidden');
+        }
+
+        // Ambil Data Terupdate dari Google Spreadsheet (GAS Backend)
+        function refreshDataFromSheet() {
+            showLoader("Loading data...");
+            google.script.run
+                .withSuccessHandler(onDataLoaded)
+                .withFailureHandler(onGASFailure)
+                .loadAllData();
+        }
+
+        // Dipanggil ketika data sukses ditarik dari Spreadsheet / Mock Layer
+        function onDataLoaded(res) {
+            data = res.transaksi;
+            categories = res.kategori;
+            pockets = res.pockets;
+            budgets = res.budgets;
+            
+            // Konfigurasi Pengaturan & Fix Validasi Boolean secara Presisi
+            currentUsername = res.settings.username || "Handy";
+            isPinEnabled = String(res.settings.isPinEnabled).toLowerCase() === "true"; // Mendeteksi "true" / "TRUE" dari database
+            savedPin = String(res.settings.savedPin || "1234"); // FIX: Memaksa konversi ke String untuk mencegah kegagalan pencocokan === (strict equality)
+
+            // Update UI Profil
+            document.getElementById('profileName').innerText = currentUsername;
+            document.getElementById('profileAvatar').innerText = currentUsername.charAt(0).toUpperCase();
+
+            // Set langsung status checkbox pinToggle agar sinkron sejak awal
+            document.getElementById('pinToggle').checked = isPinEnabled;
+
+            // Selesaikan Inisialisasi Layar PIN & Update Navigasi
+            triggerLockScreenOnLoad();
+            updateLogoutButtonVisibility();
+            
+            // Render Seluruh Tab halaman
+            setDefaultDate();
+            populateBudgetDropdowns();
+            updateCategories();
+            render();
+            renderInsights();
+            renderPockets();
+            renderBudgets();
+            renderDoughnutChart();
+
+            hideLoader();
+        }
+
+        function onGASFailure(err) {
+            hideLoader();
+            showNotification("Gagal memproses data! Silakan coba lagi.", true);
+            console.error(err);
+        }
+
+        // Memperbarui visibilitas Navigasi Bawah
+        function updateBottomNavVisibility() {
+            const bottomNav = document.getElementById('bottomNav');
+            const pinOverlay = document.getElementById('pinLockScreen');
+            if (pinOverlay.classList.contains('hidden')) {
+                bottomNav.classList.remove('hidden');
+            } else {
+                bottomNav.classList.add('hidden');
+            }
+        }
+
+        // Menentukan kapan Kunci Layar PIN harus muncul
+        function triggerLockScreenOnLoad() {
+            const pinOverlay = document.getElementById('pinLockScreen');
+            if(isPinEnabled && !isUserUnlocked) {
+                // Tampilkan halaman login hanya jika PIN aktif dan pengguna belum pernah login
+                pinOverlay.classList.remove('hidden');
+                enteredPinVal = "";
+                updatePinIndicatorDots();
+            } else {
+                // Sembunyikan layar pin jika dinonaktifkan atau pengguna sudah masuk/login
+                pinOverlay.classList.add('hidden');
+            }
+            updateBottomNavVisibility();
+        }
+
+        // Memperbarui visibilitas tombol Logout
+        function updateLogoutButtonVisibility() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if(isPinEnabled) {
+                logoutBtn.classList.remove('hidden');
+            } else {
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        // Fungsi Logout Aplikasi (Mengembalikan ke Halaman PIN)
+        function logoutApp() {
+            if(!isPinEnabled) return;
+            const pinOverlay = document.getElementById('pinLockScreen');
+            
+            isUserUnlocked = false; // Reset status login kembali ke false saat logout
+            enteredPinVal = "";
+            updatePinIndicatorDots();
+            hidePinLockErrorMessage();
+            
+            pinOverlay.classList.remove('hidden');
+            closeSettings();
+            showNotification("Berhasil Logout. Masukkan PIN untuk masuk.");
+            updateBottomNavVisibility();
+        }
+
+        // Aksi mengubah sakelar PIN On/Off di pengaturan
+        function togglePinSetting() {
+            const toggle = document.getElementById('pinToggle');
+            const configArea = document.getElementById('pinConfigArea');
+            isPinEnabled = toggle.checked;
+            if(isPinEnabled) {
+                configArea.classList.remove('hidden');
+            } else {
+                configArea.classList.add('hidden');
+            }
+
+            // Simpan status PIN ke Spreadsheet / State
+            showLoader("Proses menyimpan pengaturan PIN...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    hideLoader();
+                    updateLogoutButtonVisibility();
+                })
+                .withFailureHandler(onGASFailure)
+                .updateSetting('isPinEnabled', isPinEnabled);
+        }
+
+        // Menyimpan PIN Kustom Baru ke Spreadsheet / State
+        function savePin() {
+            const pinVal = document.getElementById('pinInputVal').value;
+            if (pinVal.length === 4) {
+                showLoader("Proses menyimpan PIN baru...");
+                google.script.run
+                    .withSuccessHandler(() => {
+                        savedPin = pinVal;
+                        hideLoader();
+                        showNotification("PIN Berhasil Diperbarui!");
+                        document.getElementById('pinInputVal').value = "";
+                    })
+                    .withFailureHandler(onGASFailure)
+                    .updateSetting('savedPin', pinVal);
+            } else {
+                showNotification("PIN harus berjumlah 4-digit angka!", true);
+            }
+        }
+
+        // Notifikasi Kustom Toast
+        function showNotification(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] px-4 py-2.5 rounded-2xl font-bold text-xs shadow-lg transition duration-300 ${isError ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'} max-w-xs text-center`;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500); // Durasi toast ditingkatkan sedikit agar pengguna sempat membaca detail analisis
+        }
+
+        // Menambahkan Angka PIN ke State Enkripsi Layar
+        function addLockPin(num) {
+            if (enteredPinVal.length < 4) {
+                enteredPinVal += num;
+                updatePinIndicatorDots();
+                hidePinLockErrorMessage();
+                if (enteredPinVal.length === 4) {
+                    setTimeout(verifyInputtedPIN, 150);
+                }
+            }
+        }
+
+        // Tombol Clear PIN Pad
+        function clearLockPin() {
+            enteredPinVal = "";
+            updatePinIndicatorDots();
+            hidePinLockErrorMessage();
+        }
+
+        // Tombol Backspace PIN Pad
+        function backspaceLockPin() {
+            if (enteredPinVal.length > 0) {
+                enteredPinVal = enteredPinVal.slice(0, -1);
+                updatePinIndicatorDots();
+                hidePinLockErrorMessage();
+            }
+        }
+
+        // Memperbarui indikator dot pengisian PIN
+        function updatePinIndicatorDots() {
+            const dots = document.querySelectorAll('#pinDotsContainer span');
+            dots.forEach((dot, index) => {
+                if (index < enteredPinVal.length) {
+                    dot.classList.add('bg-emerald-500', 'border-emerald-500');
+                    dot.classList.remove('border-gray-500');
+                } else {
+                    dot.classList.remove('bg-emerald-500', 'border-emerald-500');
+                    dot.classList.add('border-gray-500');
+                }
+            });
+        }
+
+        // Verifikasi PIN Input berdasarkan nilai database asli
+        function verifyInputtedPIN() {
+            const errorMsg = document.getElementById('pinErrorMsg');
+            const pinOverlay = document.getElementById('pinLockScreen');
+            const containerDots = document.getElementById('pinDotsContainer');
+
+            // Memeriksa kesamaan dengan PIN di Database dengan aman setelah dikoversi ke String
+            if (enteredPinVal === savedPin) {
+                isUserUnlocked = true; // Tandai pengguna berhasil login
+                pinOverlay.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    pinOverlay.classList.add('hidden');
+                    pinOverlay.classList.remove('opacity-0', 'scale-95');
+                    updateBottomNavVisibility();
+                }, 300);
+                showNotification("Aplikasi Berhasil Dibuka!");
+            } else {
+                errorMsg.classList.remove('opacity-0');
+                containerDots.classList.add('shake-effect');
+                setTimeout(() => {
+                    containerDots.classList.remove('shake-effect');
+                }, 400);
+                enteredPinVal = "";
+                updatePinIndicatorDots();
+            }
+        }
+
+        function hidePinLockErrorMessage() {
+            document.getElementById('pinErrorMsg').classList.add('opacity-0');
+        }
+
+        // Default Hari Ini
+        function setDefaultDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        // Format Input Nominal dengan Titik Otomatis
+        function formatNumberInput(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val) {
+                input.value = parseInt(val).toLocaleString('id-ID');
+            } else {
+                input.value = '';
+            }
+        }
+
+        // Kalkulator Input Angka Transaksi
+        function addNum(n) { 
+            currentNum = currentNum === "0" ? n : currentNum + n; 
+            document.getElementById('calcDisplay').innerText = parseInt(currentNum).toLocaleString(); 
+        }
+        function clearNum() { 
+            currentNum = "0"; 
+            document.getElementById('calcDisplay').innerText = "0"; 
+        }
+        function backspace() { 
+            currentNum = currentNum.length > 1 ? currentNum.slice(0, -1) : "0"; 
+            document.getElementById('calcDisplay').innerText = parseInt(currentNum).toLocaleString(); 
+        }
+
+        // Dashboard Riwayat Transaksi & Fitur Pencarian Terintegrasi
+        function handleSearch() {
+            currentPage = 1;
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('activityList');
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+            const filteredData = data.filter(t => {
+                return t.nama.toLowerCase().includes(query) || 
+                       t.kategori.toLowerCase().includes(query) ||
+                       t.tanggal.includes(query);
+            });
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedData = filteredData.slice(startIndex, endIndex);
+
+            if (paginatedData.length === 0) {
+                list.innerHTML = `
+                <div class="card p-6 text-center text-gray-400 text-xs">
+                    Transaksi tidak ditemukan 🔍
+                </div>`;
+                document.getElementById('pageInfo').innerText = `1/1`;
+                return;
+            }
+
+            list.innerHTML = paginatedData.map(t => {
+                const isIncome = t.type === 'Pemasukan';
+                const iconBg = isIncome ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700';
+                const arrowIcon = isIncome 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>`;
+
+                return `
+                <div class="card p-4 flex justify-between items-center text-sm transition transform hover:scale-[1.01] hover:shadow-md duration-300">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 ${iconBg} rounded-full flex items-center justify-center">
+                            ${arrowIcon}
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-800">${t.nama}</p>
+                            <p class="text-[10px] text-gray-400 font-semibold">${t.tanggal}</p>
+                        </div>
+                    </div>
+                    <p class="font-extrabold ${isIncome ? 'text-green-600' : 'text-red-500'}">
+                        ${isIncome ? '+' : '-'} Rp ${t.jumlah.toLocaleString('id-ID')}
+                    </p>
+                </div>`;
+            }).join('');
+            
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+            document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`;
+        }
+
+        function changePage(direction) {
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const filteredData = data.filter(t => {
+                return t.nama.toLowerCase().includes(query) || 
+                       t.kategori.toLowerCase().includes(query) ||
+                       t.tanggal.includes(query);
+            });
+
+            const maxPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+            currentPage += direction;
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > maxPages) currentPage = maxPages;
+            render();
+        }
+
+        // Pengaturan Profil & Nama Pengguna (Sheet Integration)
+        function openSettings() {
+            document.getElementById('usernameInput').value = currentUsername;
+            document.getElementById('pinToggle').checked = isPinEnabled;
+            const configArea = document.getElementById('pinConfigArea');
+            if(isPinEnabled) {
+                configArea.classList.remove('hidden');
+            } else {
+                configArea.classList.add('hidden');
+            }
+            document.getElementById('settingsModal').classList.remove('hidden');
+            renderCategories();
+        }
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+        function saveUsername() {
+            const val = document.getElementById('usernameInput').value.trim();
+            if(val) {
+                showLoader("Proses memperbarui nama pengguna...");
+                google.script.run
+                    .withSuccessHandler(() => {
+                        currentUsername = val;
+                        document.getElementById('profileName').innerText = val;
+                        document.getElementById('profileAvatar').innerText = val.charAt(0).toUpperCase();
+                        hideLoader();
+                        closeSettings();
+                        showNotification("Nama pengguna berhasil disimpan!");
+                    })
+                    .withFailureHandler(onGASFailure)
+                    .updateSetting('username', val);
+            }
+        }
+
+        // CRUD Kategori dengan Google Sheets / State
+        function renderCategories() {
+            const list = document.getElementById('catList');
+            list.innerHTML = "";
+            Object.keys(categories).forEach(type => {
+                categories[type].forEach((name, index) => {
+                    list.innerHTML += `<div class="bg-white p-3 rounded-xl flex justify-between items-center text-xs border border-gray-100 shadow-sm">
+                        <span class="font-bold text-gray-700">${name} <span class="text-[9px] font-normal text-gray-400">(${type})</span></span>
+                        <div class="flex gap-2">
+                            <button onclick="editCategory('${type}', ${index})" class="text-blue-500 font-bold hover:underline">Edit</button>
+                            <button onclick="deleteCategory('${type}', ${index})" class="text-red-500 font-bold hover:underline">Hapus</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        // Simpan Kategori
+        function saveCategory() {
+            const name = document.getElementById('catName').value.trim();
+            const type = document.getElementById('catType').value;
+            if (!name) return;
+
+            showLoader("Proses menyimpan kategori...");
+            if (editIndex > -1) { 
+                const oldName = categories[editType][editIndex];
+                google.script.run
+                    .withSuccessHandler(() => {
+                        categories[editType][editIndex] = name;
+                        editIndex = -1;
+                        document.getElementById('catName').value = "";
+                        renderCategories();
+                        updateCategories();
+                        populateBudgetDropdowns();
+                        hideLoader();
+                        showNotification("Kategori diperbarui!");
+                    })
+                    .withFailureHandler(onGASFailure)
+                    .updateCategory(editType, oldName, name);
+            } else { 
+                google.script.run
+                    .withSuccessHandler(() => {
+                        categories[type].push(name);
+                        document.getElementById('catName').value = "";
+                        renderCategories();
+                        updateCategories();
+                        populateBudgetDropdowns();
+                        hideLoader();
+                        showNotification("Kategori ditambahkan!");
+                    })
+                    .withFailureHandler(onGASFailure)
+                    .addCategory(type, name);
+            }
+        }
+
+        // Edit Kategori
+        function editCategory(type, index) { 
+            document.getElementById('catName').value = categories[type][index];
+            document.getElementById('catType').value = type;
+            editIndex = index; 
+            editType = type;
+        }
+
+        // Hapus Kategori
+        function deleteCategory(type, index) { 
+            const targetName = categories[type][index];
+            showLoader("Proses menghapus kategori...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    categories[type].splice(index, 1);
+                    renderCategories();
+                    updateCategories();
+                    populateBudgetDropdowns();
+                    hideLoader();
+                    showNotification("Kategori dihapus!");
+                })
+                .withFailureHandler(onGASFailure)
+                .deleteCategory(type, targetName);
+        }
+
+        // CRUD POCKET (Kantong Tabungan) via Google Sheets / State
+        function renderPockets() {
+            const list = document.getElementById('pocketList');
+            list.innerHTML = "";
+            pockets.forEach((p, idx) => {
+                const ratio = Math.min(100, Math.round((p.terkumpul / p.target) * 100));
+                list.innerHTML += `
+                    <div class="card p-4 space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-gray-800">${p.nama}</h4>
+                                <p class="text-[10px] text-gray-400 font-bold">Target: Rp ${p.target.toLocaleString('id-ID')}</p>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">${ratio}%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${ratio}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1 text-[11px]">
+                            <span class="text-gray-500 font-semibold">Terkumpul: Rp ${p.terkumpul.toLocaleString('id-ID')}</span>
+                            <div class="flex gap-2.5">
+                                <button onclick="editPocket(${idx})" class="text-blue-500 font-extrabold">Edit</button>
+                                <button onclick="deletePocket(${idx})" class="text-red-500 font-extrabold">Hapus</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function savePocket() {
+            const name = document.getElementById('pocketName').value.trim();
+            const target = parseInt(document.getElementById('pocketTarget').value.replace(/\./g, ''));
+            const saved = parseInt(document.getElementById('pocketSaved').value.replace(/\./g, '')) || 0;
+
+            if(!name || isNaN(target)) return;
+
+            showLoader("Proses menyimpan kantong tabungan...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    document.getElementById('pocketName').value = "";
+                    document.getElementById('pocketTarget').value = "";
+                    document.getElementById('pocketSaved').value = "";
+                    editPocketId = null;
+                    document.getElementById('pocketFormTitle').innerText = "Tambah Kantong Baru";
+                    refreshDataFromSheet();
+                    showNotification("Kantong berhasil disimpan!");
+                })
+                .withFailureHandler(onGASFailure)
+                .savePocket(editPocketId, name, target, saved);
+        }
+
+        function editPocket(idx) {
+            const p = pockets[idx];
+            document.getElementById('pocketName').value = p.nama;
+            document.getElementById('pocketTarget').value = p.target.toLocaleString('id-ID');
+            document.getElementById('pocketSaved').value = p.terkumpul.toLocaleString('id-ID');
+            editPocketId = p.id;
+            document.getElementById('pocketFormTitle').innerText = "Edit Kantong Tabungan";
+        }
+
+        // Hapus Kantong
+        function deletePocket(idx) {
+            const p = pockets[idx];
+            showLoader("Proses menghapus kantong tabungan...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    refreshDataFromSheet();
+                    showNotification("Kantong dihapus!");
+                })
+                .withFailureHandler(onGASFailure)
+                .deletePocket(p.id);
+        }
+
+        // CRUD BUDGETING via Google Sheets / State
+        function populateBudgetDropdowns() {
+            const select = document.getElementById('budgetCategory');
+            if (select) {
+                select.innerHTML = categories.Pengeluaran.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+        }
+
+        // Reset Halaman Laporan Insight Saat Filter Bulan/Tahun Diganti
+        function resetInsightAndRender() {
+            insightCurrentPage = 1;
+            const searchInput = document.getElementById('insightSearchInput');
+            if (searchInput) {
+                searchInput.value = "";
+            }
+            renderInsights(false);
+        }
+
+        // Input Pengendali Filter Saringan Pencarian Insight
+        function handleInsightSearch() {
+            insightCurrentPage = 1;
+            renderInsights(false);
+        }
+
+        // Ubah Halaman Navigasi (Pagination) di Tabel Insight
+        function changeInsightPage(direction) {
+            insightCurrentPage += direction;
+            renderInsights(false);
+        }
+
+        function getCategoryTotalExpense(catName) {
+            const activeMonth = document.getElementById('filterMonth').value;
+            const activeYear = document.getElementById('filterYear').value;
+
+            return data.filter(t => {
+                const parts = t.tanggal.split('-');
+                return t.type === 'Pengeluaran' && t.kategori === catName && parts[0] === activeYear && parts[1] === activeMonth;
+            }).reduce((acc, curr) => acc + curr.jumlah, 0);
+        }
+
+        // Render Anggaran
+        function renderBudgets() {
+            const list = document.getElementById('budgetList');
+            list.innerHTML = "";
+            budgets.forEach((b, idx) => {
+                const currentSpent = getCategoryTotalExpense(b.kategori);
+                const ratio = Math.min(100, b.limit > 0 ? Math.round((currentSpent / b.limit) * 100) : 0);
+                const isOverBudget = currentSpent > b.limit;
+                const barColor = isOverBudget ? 'bg-red-500' : 'bg-emerald-500';
+                const statusColor = isOverBudget ? 'text-red-600 bg-red-50' : 'text-emerald-600 bg-emerald-50';
+
+                list.innerHTML += `
+                    <div class="card p-4 space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-gray-800">${b.kategori}</h4>
+                                <p class="text-[10px] text-gray-400 font-bold">Limit: Rp ${b.limit.toLocaleString('id-ID')}</p>
+                            </div>
+                            <span class="text-[10px] font-extrabold ${statusColor} px-2 py-1 rounded-lg">
+                                ${isOverBudget ? 'Over Budget 🚨' : `${ratio}% Terpakai`}
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${ratio}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1 text-[11px]">
+                            <span class="text-gray-500 font-semibold">Telah Terpakai (Bulan Ini): Rp ${currentSpent.toLocaleString('id-ID')}</span>
+                            <div class="flex gap-2.5">
+                                <button onclick="editBudget(${idx})" class="text-blue-500 font-extrabold">Edit</button>
+                                <button onclick="deleteBudget(${idx})" class="text-red-500 font-extrabold">Hapus</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function saveBudget() {
+            const cat = document.getElementById('budgetCategory').value;
+            const limit = parseInt(document.getElementById('budgetLimit').value.replace(/\./g, ''));
+
+            if(isNaN(limit)) return;
+
+            showLoader("Proses menyimpan alokasi anggaran...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    document.getElementById('budgetLimit').value = "";
+                    document.getElementById('budgetFormTitle').innerText = "Atur Batas Anggaran";
+                    editBudgetIndex = -1;
+                    refreshDataFromSheet();
+                    showNotification("Batas anggaran disimpan!");
+                })
+                .withFailureHandler(onGASFailure)
+                .saveBudget(cat, limit);
+        }
+
+        function editBudget(idx) {
+            const b = budgets[idx];
+            document.getElementById('budgetCategory').value = b.kategori;
+            document.getElementById('budgetLimit').value = b.limit.toLocaleString('id-ID');
+            editBudgetIndex = idx;
+            document.getElementById('budgetFormTitle').innerText = "Edit Anggaran Kategori";
+        }
+
+        // Hapus Alokasi Anggaran
+        function deleteBudget(idx) {
+            const b = budgets[idx];
+            showLoader("Proses menghapus alokasi anggaran...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    refreshDataFromSheet();
+                    showNotification("Anggaran dihapus!");
+                })
+                .withFailureHandler(onGASFailure)
+                .deleteBudget(b.kategori);
+        }
+
+        // Tab Switching
+        function switchTab(id) { 
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active-tab', el.id === id)); 
+            if (id === 'insightView') {
+                renderInsights();
+            } else if (id === 'pocketView') {
+                renderPockets();
+            } else if (id === 'budgetView') {
+                renderBudgets();
+            }
+        }
+
+        function updateCategories() {
+            const selectedType = document.querySelector('input[name="jenis"]:checked').value;
+            const selectEl = document.getElementById('kategori');
+            if (categories[selectedType]) {
+                selectEl.innerHTML = categories[selectedType].map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+        }
+
+        // Fungsi Informatif Analisis Kesehatan Keuangan Berdasarkan Status Badge
+        function showHealthAnalysis() {
+            const filterMonth = document.getElementById('filterMonth').value;
+            const activeMonthName = document.getElementById('filterMonth').options[document.getElementById('filterMonth').selectedIndex].text;
+            const filterYear = document.getElementById('filterYear').value;
+
+            // Mengalkulasi Pemasukan dan Pengeluaran bulan yang dipilih
+            let totalIn = 0;
+            let totalOut = 0;
+            const filtered = data.filter(t => {
+                const parts = t.tanggal.split('-');
+                return parts[0] === filterYear && parts[1] === filterMonth;
+            });
+            filtered.forEach(t => {
+                if (t.type === 'Pemasukan') totalIn += t.jumlah;
+                else totalOut += t.jumlah;
+            });
+
+            // Mengalkulasi akumulasi keseluruhan saldo bersih di database
+            let overallIn = 0;
+            let overallOut = 0;
+            data.forEach(t => {
+                if (t.type === 'Pemasukan') overallIn += t.jumlah;
+                else if (t.type === 'Pengeluaran') overallOut += t.jumlah;
+            });
+            const overallNet = overallIn - overallOut;
+            const ratio = totalIn > 0 ? Math.round((totalOut / totalIn) * 100) : 0;
+
+            let explanation = "";
+            if (overallNet < 0) {
+                explanation = `Kondisi Kritis 🔴: Akumulasi saldo bersih Anda bernilai negatif (minus Rp ${Math.abs(overallNet).toLocaleString('id-ID')}). Segera batasi seluruh pengeluaran!`;
+            } else if (totalIn === 0 && totalOut === 0) {
+                explanation = `Belum Ada Data ⚪: Tidak ada catatan transaksi di bulan ${activeMonthName} ${filterYear} untuk dianalisis.`;
+            } else if (ratio > 100) {
+                explanation = `Kondisi Defisit 🔴: Pengeluaran bulan ${activeMonthName} (Rp ${totalOut.toLocaleString('id-ID')}) melampaui pemasukan Anda sebesar Rp ${(totalOut - totalIn).toLocaleString('id-ID')}.`;
+            } else if (ratio > 75) {
+                explanation = `Kondisi Boros ⚠️: Rasio belanja Anda sudah mencapai ${ratio}% dari pemasukan bulan ini. Sisa anggaran Anda sangat kritis!`;
+            } else if (ratio > 50) {
+                explanation = `Kondisi Waspada 🟡: Rasio belanja mencapai ${ratio}% dari pemasukan. Kurangi pengeluaran non-primer agar sisa saldo tabungan tetap aman.`;
+            } else {
+                explanation = `Kondisi Sehat 🟢: Luar biasa! Pengeluaran hanya sebesar ${ratio}% dari pemasukan bulan ${activeMonthName}. Arus kas dan tabungan Anda berada dalam kondisi prima!`;
+            }
+
+            showNotification(explanation);
+        }
+
+        // Render Analisis & Laporan Insight
+        function renderInsights(resetPage = true) {
+            if (resetPage) {
+                insightCurrentPage = 1;
+                const searchInput = document.getElementById('insightSearchInput');
+                if (searchInput) {
+                    searchInput.value = "";
+                }
+            }
+
+            const filterMonth = document.getElementById('filterMonth').value;
+            const filterYear = document.getElementById('filterYear').value;
+            
+            const filtered = data.filter(t => {
+                const parts = t.tanggal.split('-');
+                return parts[0] === filterYear && parts[1] === filterMonth;
+            });
+
+            let totalIn = 0;
+            let totalOut = 0;
+
+            filtered.forEach(t => {
+                if (t.type === 'Pemasukan') {
+                    totalIn += t.jumlah;
+                } else {
+                    totalOut += t.jumlah;
+                }
+            });
+
+            document.getElementById('totalPemasukanHeader').innerText = `Rp ${totalIn.toLocaleString('id-ID')}`;
+            document.getElementById('totalPengeluaranHeader').innerText = `Rp ${totalOut.toLocaleString('id-ID')}`;
+
+            // Menghitung Total Saldo secara dinamis (Seluruh Pemasukan - Seluruh Pengeluaran di Database)
+            let overallIn = 0;
+            let overallOut = 0;
+            data.forEach(t => {
+                if (t.type === 'Pemasukan') overallIn += t.jumlah;
+                else if (t.type === 'Pengeluaran') overallOut += t.jumlah;
+            });
+            const overallNet = overallIn - overallOut;
+            const totalSaldoElement = document.getElementById('headerTotalSaldo');
+            if (totalSaldoElement) {
+                totalSaldoElement.innerText = `Rp ${overallNet.toLocaleString('id-ID')}`;
+            }
+
+            const ratio = totalIn > 0 ? Math.min(100, Math.round((totalOut / totalIn) * 100)) : 0;
+            document.getElementById('headerSavingsRatioText').innerText = `Rasio: ${ratio}%`;
+            
+            const statusText = document.getElementById('headerStatusText');
+            const progressBar = document.getElementById('headerProgressBar');
+            progressBar.style.width = `${ratio}%`;
+
+            if (ratio > 75) {
+                statusText.innerText = "Boros ⚠️";
+                progressBar.className = "bg-rose-400 h-full rounded-full transition-all duration-500";
+                statusText.className = "text-[9px] bg-rose-500/20 px-1.5 py-0.5 rounded-full text-rose-300";
+            } else if (ratio > 50) {
+                statusText.innerText = "Waspada 🟡";
+                progressBar.className = "bg-yellow-400 h-full rounded-full transition-all duration-500";
+                statusText.className = "text-[9px] bg-yellow-500/20 px-1.5 py-0.5 rounded-full text-yellow-300";
+            } else {
+                statusText.innerText = "Aman ✅";
+                progressBar.className = "bg-emerald-400 h-full rounded-full transition-all duration-500";
+                statusText.className = "text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded-full text-emerald-300";
+            }
+
+            // Memperbarui Status Kesehatan Keuangan (Selected Feature) secara dinamis & informatif
+            const statusBadge = document.getElementById('headerStatusBadge');
+            if (statusBadge) {
+                if (overallNet < 0) {
+                    statusBadge.innerHTML = 'Kritis 🔴';
+                } else if (totalIn === 0 && totalOut === 0) {
+                    statusBadge.innerHTML = 'Mulai ⚪';
+                } else if (ratio > 100) {
+                    statusBadge.innerHTML = 'Defisit 🔴';
+                } else if (ratio > 75) {
+                    statusBadge.innerHTML = 'Boros ⚠️';
+                } else if (ratio > 50) {
+                    statusBadge.innerHTML = 'Waspada 🟡';
+                } else {
+                    statusBadge.innerHTML = 'Sehat 🟢';
+                }
+            }
+
+            // Memfilter tabel Detail Kategori berdasarkan kueri pencarian kustom
+            const searchInput = document.getElementById('insightSearchInput');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            
+            const tableData = filtered.filter(t => {
+                return t.kategori.toLowerCase().includes(query) || 
+                       t.type.toLowerCase().includes(query) ||
+                       t.jumlah.toString().includes(query);
+            });
+
+            // Menghitung batasan Pagination
+            const totalPages = Math.ceil(tableData.length / insightItemsPerPage) || 1;
+            if (insightCurrentPage < 1) insightCurrentPage = 1;
+            if (insightCurrentPage > totalPages) insightCurrentPage = totalPages;
+
+            const startIndex = (insightCurrentPage - 1) * insightItemsPerPage;
+            const endIndex = startIndex + insightItemsPerPage;
+            const paginatedTableData = tableData.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('insightTableBody');
+            if (paginatedTableData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-gray-400 text-xs">Tidak ada data transaksi di periode ini</td></tr>`;
+            } else {
+                tbody.innerHTML = paginatedTableData.map(t => `
+                    <tr class="hover:bg-gray-50/50 transition duration-150">
+                        <td class="py-3 font-semibold text-gray-800">${t.kategori}</td>
+                        <td class="py-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${t.type === 'Pemasukan' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${t.type}</span></td>
+                        <td class="py-3 text-right font-bold text-gray-900">Rp ${t.jumlah.toLocaleString('id-ID')}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // Perbarui indikator pagination
+            document.getElementById('insightPageInfo').innerText = `Halaman ${insightCurrentPage} dari ${totalPages}`;
+
+            if (insightChart) {
+                insightChart.destroy();
+            }
+
+            const ctxComp = document.getElementById('insightComparisonChart').getContext('2d');
+            insightChart = new Chart(ctxComp, {
+                type: 'bar',
+                data: {
+                    labels: ['Pemasukan', 'Pengeluaran'],
+                    datasets: [{
+                        label: 'Total Nominal (Rp)',
+                        data: [totalIn, totalOut],
+                        backgroundColor: ['#16a34a', '#dc2626'],
+                        borderRadius: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Render Grafik Lingkaran (Doughnut) Pengeluaran secara dinamis
+        function renderDoughnutChart() {
+            const expTotals = {};
+            let totalExp = 0;
+            data.forEach(t => {
+                if (t.type === 'Pengeluaran') {
+                    expTotals[t.kategori] = (expTotals[t.kategori] || 0) + t.jumlah;
+                    totalExp += t.jumlah;
+                }
+            });
+
+            const sortedCats = Object.keys(expTotals).map(cat => ({
+                name: cat,
+                value: expTotals[cat],
+                percentage: Math.round((expTotals[cat] / totalExp) * 100)
+            })).sort((a,b) => b.value - a.value);
+
+            if (sortedCats.length > 0) {
+                document.getElementById('topCategoryLabel').innerText = `${sortedCats[0].name} 🔥`;
+            } else {
+                document.getElementById('topCategoryLabel').innerText = "- 🔥";
+            }
+
+            const legendContainer = document.getElementById('chartLegendContainer');
+            const topColors = ['#16a34a', '#4ade80', '#15803d', '#86efac', '#22c55e'];
+            if (legendContainer) {
+                legendContainer.innerHTML = sortedCats.slice(0, 4).map((cat, idx) => {
+                    const color = topColors[idx % topColors.length];
+                    return `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5 truncate">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+                                <span class="truncate font-semibold text-gray-700">${cat.name}</span>
+                            </div>
+                            <span class="font-extrabold text-gray-900 ml-1">${cat.percentage}%</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (mainChart) {
+                mainChart.destroy();
+            }
+
+            const ctxMain = document.getElementById('expenseChart').getContext('2d');
+            mainChart = new Chart(ctxMain, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedCats.slice(0, 4).map(c => c.name),
+                    datasets: [{
+                        data: sortedCats.slice(0, 4).map(c => c.value),
+                        backgroundColor: topColors.slice(0, sortedCats.slice(0, 4).length)
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    cutout: '65%',
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function exportToPDF() {
+            const element = document.getElementById('pdfContainer');
+            const opt = {
+                margin:       10,
+                filename:     `Laporan_Keuangan_Insight.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Mulai memuat data saat window dimuat
+        window.onload = function() {
+            refreshDataFromSheet();
+        };
+
+        // Simpan Form Transaksi Baru ke Spreadsheet / State
+        document.getElementById('transForm').onsubmit = function(e) {
+            e.preventDefault();
+            const dateVal = document.getElementById('dateInput').value;
+            const categoryVal = document.getElementById('kategori').value;
+            const amountVal = parseInt(currentNum);
+            const typeVal = document.querySelector('input[name="jenis"]:checked').value;
+            const keteranganVal = document.getElementById('keteranganInput').value.trim();
+
+            if (amountVal <= 0 || isNaN(amountVal)) {
+                showNotification("Nominal transaksi tidak valid!", true);
+                return;
+            }
+
+            showLoader("Proses menyimpan transaksi...");
+            google.script.run
+                .withSuccessHandler(() => {
+                    clearNum();
+                    document.getElementById('keteranganInput').value = ""; 
+                    setDefaultDate(); 
+                    switchTab('homeView');
+                    refreshDataFromSheet();
+                    showNotification("Transaksi sukses dicatat!");
+                })
+                .withFailureHandler(onGASFailure)
+                .addTransaction(dateVal, categoryVal, amountVal, typeVal, keteranganVal || categoryVal);
+        };
+    </script>
+</body>
+</html>
