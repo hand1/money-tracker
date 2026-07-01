@@ -1,4 +1,4 @@
-<img width="1896" height="936" alt="image" src="https://github.com/user-attachments/assets/44d4250b-088d-4f2c-9b2e-6e529dae4d21" /><img width="1896" height="936" alt="image" src="https://github.com/user-attachments/assets/dee95aeb-96e1-4d2e-b058-ddd94e2a1a45" />
+<img width="1896" height="936" alt="image" src="https://github.com/user-attachments/assets/44d4250b-088d-4f2c-9b2e-6e529dae4d21" />
 # Money Tracker App by Handy💸
 
 Money Tracker adalah aplikasi pelacak keuangan pribadi yang ringan, aman, dan mudah digunakan. Aplikasi ini membantu Anda mencatat arus kas, mengatur anggaran, dan menganalisis kesehatan keuangan Anda secara intuitif.
