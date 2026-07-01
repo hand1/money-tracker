@@ -1,4 +1,4 @@
-# Money Tracker App 💸
+# Money Tracker App by Handy💸
 
 Money Tracker adalah aplikasi pelacak keuangan pribadi yang ringan, aman, dan mudah digunakan. Aplikasi ini membantu Anda mencatat arus kas, mengatur anggaran, dan menganalisis kesehatan keuangan Anda secara intuitif.
 
