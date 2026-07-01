@@ -1,5 +1,3 @@
-Berikut adalah draf `README.md` yang lengkap, profesional, dan informatif untuk proyek GitHub Anda.
-
 ---
 
 # Money Tracker App 💸
