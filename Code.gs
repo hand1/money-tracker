@@ -22,7 +22,7 @@ function getOrCreateSheet(sheetName, headers) {
     sheet.getRange(1, 1, 1, headers.length)
          .setFontWeight("bold")
          .setBackground("#16a34a")
-         .setFontColor("#white");
+         .setFontColor("white");
   }
   return sheet;
 }
@@ -34,6 +34,7 @@ function initDatabase() {
   getOrCreateSheet('kantong', ['ID', 'Nama', 'Target', 'Terkumpul']);
   getOrCreateSheet('anggaran', ['Kategori', 'Limit']);
   getOrCreateSheet('pengaturan', ['Kunci', 'Nilai']);
+  getOrCreateSheet('pengingat', ['ID', 'Nama', 'Tanggal', 'Status']);
   
   // Set Kategori Default jika tabel kategori masih kosong
   var katSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('kategori');
@@ -121,7 +122,27 @@ function loadAllData() {
     });
   }
 
-  // 5. Ambil Pengaturan
+  // 5. Ambil Pengingat (Reminder)
+  var remSheet = ss.getSheetByName('pengingat');
+  var remValues = remSheet.getDataRange().getValues();
+  var reminders = [];
+  for (var n = 1; n < remValues.length; n++) {
+    var rawRemDate = remValues[n][2];
+    var formattedRemDate = "";
+    if (rawRemDate instanceof Date) {
+      formattedRemDate = Utilities.formatDate(rawRemDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    } else {
+      formattedRemDate = String(rawRemDate);
+    }
+    reminders.push({
+      id: remValues[n][0],
+      nama: remValues[n][1],
+      tanggal: formattedRemDate,
+      status: remValues[n][3]
+    });
+  }
+
+  // 6. Ambil Pengaturan
   var setSheet = ss.getSheetByName('pengaturan');
   var setValues = setSheet.getDataRange().getValues();
   var settings = {};
@@ -134,6 +155,7 @@ function loadAllData() {
     kategori: kategoriObj,
     pockets: pockets,
     budgets: budgets,
+    reminders: reminders,
     settings: settings
   };
 }
@@ -249,6 +271,44 @@ function deleteBudget(category) {
   var values = range.getValues();
   for (var i = 1; i < values.length; i++) {
     if (values[i][0] === category) {
+      sheet.deleteRow(i + 1);
+      break;
+    }
+  }
+  return { success: true };
+}
+
+// Simpan Pengingat (Tambah / Edit / Update Status Verifikasi)
+function saveReminder(id, name, date, status) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('pengingat');
+  var range = sheet.getDataRange();
+  var values = range.getValues();
+  var found = false;
+  
+  if (id) {
+    for (var i = 1; i < values.length; i++) {
+      if (values[i][0] === id) {
+        sheet.getRange(i + 1, 1, 1, 4).setValues([[id, name, date, status]]);
+        found = true;
+        break;
+      }
+    }
+  }
+  
+  if (!found) {
+    var newId = "RM" + new Date().getTime();
+    sheet.appendRow([newId, name, date, status]);
+  }
+  return { success: true };
+}
+
+// Hapus Pengingat
+function deleteReminder(id) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('pengingat');
+  var range = sheet.getDataRange();
+  var values = range.getValues();
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][0] === id) {
       sheet.deleteRow(i + 1);
       break;
     }
