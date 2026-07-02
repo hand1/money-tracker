@@ -11,6 +11,8 @@ Money Tracker adalah aplikasi pelacak keuangan pribadi yang ringan, aman, dan mu
 * **Fitur Keamanan:** Proteksi aplikasi dengan 4-digit PIN.
 * **Manajemen Kategori:** Tambahkan, edit, atau hapus kategori sesuai kebutuhan.
 * **Laporan Ekspor:** Unduh laporan keuangan dalam format PDF.
+* **Reminder:** Sebagai pengingat pembayaran tagihan.
+* **Rekap Saldo:** Mengetahui saldo pada setiap bulan.
 * **Pencarian & Pagination:** Cari transaksi dengan cepat dan navigasi data yang rapi.
 
 ---
