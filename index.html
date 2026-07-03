@@ -1726,7 +1726,7 @@
                 const matchesMonth = parts[1] === activeMonth;
                 const matchesYear = selectedYear === 'all' || parts[0] === selectedYear;
                 return matchesMonth && matchesYear;
-            }).reduce((acc, curr) => acc + curr.jumlah, 0);
+            }).reduce((acc, curr) => acc + curr.growth || curr.jumlah, 0);
         }
 
         function getCategoryTotalExpense(catName) {
@@ -1957,9 +1957,10 @@
                     }
                 }
 
+                // Tampilan vertikal baru: Tombol bayar lunas permanen, tombol edit & hapus sejajar di bawahnya
                 return `
                     <div class="card p-4 border-2 ${cardBgClass} flex justify-between items-center transition duration-300 transform hover:scale-[1.01] shadow-sm">
-                        <div class="flex-1 min-w-0 pr-2">
+                        <div class="flex-1 min-w-0 pr-3">
                             <div class="flex items-center gap-2 mb-1">
                                 ${badgeHtml}
                                 <span class="text-[10px] text-gray-400 font-bold">${r.tanggal}</span>
@@ -1970,25 +1971,25 @@
                                 <span class="text-[10px] text-gray-700 font-extrabold">Rp ${(r.jumlah || 0).toLocaleString('id-ID')}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <!-- Tombol Bayar / Verifikasi Centang -->
+                        <div class="flex flex-col items-center gap-2 shrink-0">
+                            <!-- Tombol Tindakan Utama -->
                             ${r.status !== 'Sudah Dibayar' ? `
                                 <button onclick="toggleVerifyReminder('${r.id}', '${r.status}')" 
-                                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition duration-150 shadow-sm"
+                                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-3.5 py-2 rounded-xl transition duration-150 shadow-sm whitespace-nowrap"
                                         title="Tandai Sudah Dibayar">
-                                    Bayar
+                                    Sudah Dibayar
                                 </button>
                             ` : `
-                                <button onclick="toggleVerifyReminder('${r.id}', '${r.status}')" 
-                                        class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm"
-                                        title="Kembalikan ke belum bayar">
-                                    ✓
-                                </button>
+                                <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1">
+                                    ✔️ Terbayar
+                                </span>
                             `}
-                            <!-- Tombol Edit -->
-                            <button onclick="editReminder('${r.id}')" class="text-blue-500 font-extrabold text-[11px] p-1.5 hover:underline">Edit</button>
-                            <!-- Tombol Hapus -->
-                            <button onclick="deleteReminder('${r.id}')" class="text-red-500 font-extrabold text-[11px] p-1.5 hover:underline">Hapus</button>
+                            <!-- Tombol Edit & Hapus Sejajar Berada di Bawah Tombol Utama -->
+                            <div class="flex gap-2.5 justify-center items-center w-full mt-0.5">
+                                <button onclick="editReminder('${r.id}')" class="text-blue-500 font-bold text-[10px] hover:underline hover:text-blue-600">Edit</button>
+                                <span class="text-gray-300 text-[10px] font-normal">|</span>
+                                <button onclick="deleteReminder('${r.id}')" class="text-red-500 font-bold text-[10px] hover:underline hover:text-red-600">Hapus</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -2192,39 +2193,62 @@
             document.getElementById('reminderFormTitle').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Verifikasi Centang (Status "Sudah Dibayar" & Masuk ke Riwayat Pengeluaran)
+        function getNextMonthDate(dateStr) {
+            const parts = dateStr.split('-');
+            let year = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10); // 1-12
+            let day = parseInt(parts[2], 10);
+
+            // Tambahkan 1 bulan
+            month += 1;
+            if (month > 12) {
+                month = 1;
+                year += 1;
+            }
+
+            // Atasi masalah jika tanggal melebihi hari maksimal di bulan baru (misal: 31 Jan -> 28/29 Feb)
+            const maxDaysInNewMonth = new Date(year, month, 0).getDate();
+            if (day > maxDaysInNewMonth) {
+                day = maxDaysInNewMonth;
+            }
+
+            const yyyy = year;
+            const mm = String(month).padStart(2, '0');
+            const dd = String(day).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
         function toggleVerifyReminder(id, currentStatus) {
             const r = reminders.find(rm => rm.id === id);
             if (!r) return;
 
-            const newStatus = currentStatus === "Sudah Dibayar" ? "Belum" : "Sudah Dibayar";
-            showLoader("Memperbarui verifikasi pengingat...");
+            // Jika sudah terbayar, tidak boleh diubah kembali untuk mencegah kebocoran saldo
+            if (currentStatus === "Sudah Dibayar") return;
 
-            if (newStatus === "Sudah Dibayar") {
-                // 1. Catat sebagai Transaksi Pengeluaran terlebih dahulu agar Saldo Utama berkurang
-                google.script.run
-                    .withSuccessHandler(() => {
-                        // 2. Ubah status pengingat ke "Sudah Dibayar" setelah transaksi sukses dicatat
-                        google.script.run
-                            .withSuccessHandler(() => {
-                                refreshDataFromSheet();
-                                showNotification("Tagihan didebet & dicatat sebagai pengeluaran! ✔️");
-                            })
-                            .withFailureHandler(onGASFailure)
-                            .saveReminder(r.id, r.nama, r.tanggal, newStatus, r.kategori, (r.jumlah || 0));
-                    })
-                    .withFailureHandler(onGASFailure)
-                    .addTransaction(r.tanggal, r.kategori, (r.jumlah || 0), "Pengeluaran", `Bayar: ${r.nama}`);
-            } else {
-                // Hanya ubah status kembali ke Belum
-                google.script.run
-                    .withSuccessHandler(() => {
-                        refreshDataFromSheet();
-                        showNotification("Pengingat dikembalikan ke belum bayar.");
-                    })
-                    .withFailureHandler(onGASFailure)
-                    .saveReminder(r.id, r.nama, r.tanggal, newStatus, r.kategori, (r.jumlah || 0));
-            }
+            showLoader("Memproses pembayaran & mendebet saldo...");
+
+            // 1. Tambahkan ke Transaksi Pengeluaran secara permanen
+            google.script.run
+                .withSuccessHandler(() => {
+                    // 2. Ubah status pengingat yang sekarang menjadi "Sudah Dibayar"
+                    google.script.run
+                        .withSuccessHandler(() => {
+                            // 3. Otomatis buat pengingat baru yang sama untuk bulan depan (status: Belum)
+                            const nextMonthDate = getNextMonthDate(r.tanggal);
+                            
+                            google.script.run
+                               .withSuccessHandler(() => {
+                                   refreshDataFromSheet();
+                                   showNotification("Tagihan didebet & pengingat bulan depan berhasil dijadwalkan! ✔️");
+                               })
+                               .withFailureHandler(onGASFailure)
+                               .saveReminder(null, r.nama, nextMonthDate, "Belum", r.kategori, (r.jumlah || 0));
+                        })
+                        .withFailureHandler(onGASFailure)
+                        .saveReminder(r.id, r.nama, r.tanggal, "Sudah Dibayar", r.kategori, (r.jumlah || 0));
+                })
+                .withFailureHandler(onGASFailure)
+                .addTransaction(r.tanggal, r.kategori, (r.jumlah || 0), "Pengeluaran", `Bayar: ${r.nama}`);
         }
 
         // Hapus Reminder
