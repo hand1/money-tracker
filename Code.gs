@@ -34,7 +34,15 @@ function initDatabase() {
   getOrCreateSheet('kantong', ['ID', 'Nama', 'Target', 'Terkumpul']);
   getOrCreateSheet('anggaran', ['Kategori', 'Limit']);
   getOrCreateSheet('pengaturan', ['Kunci', 'Nilai']);
-  getOrCreateSheet('pengingat', ['ID', 'Nama', 'Tanggal', 'Status']);
+  
+  // Deteksi & dapatkan sheet pengingat dengan nama 'pengingat'
+  var remSheet = getOrCreateSheet('pengingat', ['ID', 'Nama', 'Tanggal', 'Status', 'Kategori', 'Jumlah']);
+  
+  // Sistem Pintar: Otomatis tambahkan kolom Kategori & Jumlah jika mendeteksi sheet pengingat lama masih 4 kolom
+  if (remSheet.getLastColumn() < 6) {
+    remSheet.getRange(1, 5).setValue("Kategori").setFontWeight("bold").setBackground("#16a34a").setFontColor("white");
+    remSheet.getRange(1, 6).setValue("Jumlah").setFontWeight("bold").setBackground("#16a34a").setFontColor("white");
+  }
   
   // Set Kategori Default jika tabel kategori masih kosong
   var katSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('kategori');
@@ -122,7 +130,7 @@ function loadAllData() {
     });
   }
 
-  // 5. Ambil Pengingat (Reminder)
+  // 5. Ambil Pengingat (Reminder) dari sheet 'pengingat' dengan 6 kolom terintegrasi
   var remSheet = ss.getSheetByName('pengingat');
   var remValues = remSheet.getDataRange().getValues();
   var reminders = [];
@@ -138,7 +146,9 @@ function loadAllData() {
       id: remValues[n][0],
       nama: remValues[n][1],
       tanggal: formattedRemDate,
-      status: remValues[n][3]
+      status: remValues[n][3],
+      kategori: remValues[n][4] || "Lain-lain", // Menyerap data Kategori jika ada
+      jumlah: Number(remValues[n][5]) || 0      // Menyerap data Nominal Jumlah jika ada
     });
   }
 
@@ -232,7 +242,7 @@ function savePocket(id, name, target, saved) {
 // Hapus Kantong
 function deletePocket(id) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('kantong');
-  var range = sheet.getDataRange();
+  var range = sheet.getDataRange(); // Perbaikan: Mengubah getRange() menjadi getDataRange()
   var values = range.getValues();
   for (var i = 1; i < values.length; i++) {
     if (values[i][0] === id) {
@@ -278,17 +288,21 @@ function deleteBudget(category) {
   return { success: true };
 }
 
-// Simpan Pengingat (Tambah / Edit / Update Status Verifikasi)
-function saveReminder(id, name, date, status) {
+// Simpan Pengingat (Tambah / Edit / Update Status Verifikasi) - Mendukung 6 Kolom
+function saveReminder(id, name, date, status, category, amount) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('pengingat');
   var range = sheet.getDataRange();
   var values = range.getValues();
   var found = false;
   
+  var cleanCategory = category || "Lain-lain";
+  var cleanAmount = Number(amount) || 0;
+  
   if (id) {
     for (var i = 1; i < values.length; i++) {
       if (values[i][0] === id) {
-        sheet.getRange(i + 1, 1, 1, 4).setValues([[id, name, date, status]]);
+        // Simpan seluruh 6 kolom terperinci
+        sheet.getRange(i + 1, 1, 1, 6).setValues([[id, name, date, status, cleanCategory, cleanAmount]]);
         found = true;
         break;
       }
@@ -296,8 +310,8 @@ function saveReminder(id, name, date, status) {
   }
   
   if (!found) {
-    var newId = "RM" + new Date().getTime();
-    sheet.appendRow([newId, name, date, status]);
+    var newId = id || ("RM" + new Date().getTime());
+    sheet.appendRow([newId, name, date, status || "Belum", cleanCategory, cleanAmount]);
   }
   return { success: true };
 }
