@@ -444,7 +444,36 @@
                 <button onclick="savePocket()" class="w-full gradient-green text-white p-3 rounded-xl font-bold text-xs shadow">Simpan Kantong</button>
             </div>
 
+            <!-- Fitur Pencarian dan Filter Berdasarkan Tahun -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-400">
+                        🔍
+                    </span>
+                    <input type="text" id="pocketSearchInput" oninput="handlePocketSearch()" placeholder="Cari kantong..." class="w-full pl-8 pr-3 py-2 bg-white rounded-xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition duration-300">
+                </div>
+                <div class="relative">
+                    <select id="pocketFilterYear" onchange="handlePocketFilterYear()" class="w-full p-2 pr-8 bg-white rounded-xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 appearance-none cursor-pointer">
+                        <!-- Diisi secara dinamis dengan tahun dari database transaksi -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <div id="pocketList" class="space-y-3"></div>
+
+            <!-- Navigasi Halaman Pocket -->
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 text-[10px]">
+                <span id="pocketPageInfo" class="font-bold text-gray-500">Halaman 1 dari 1</span>
+                <div class="flex gap-1">
+                    <button onclick="changePocketPage(-1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">◀</button>
+                    <button onclick="changePocketPage(1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">▶</button>
+                </div>
+            </div>
             
             <div class="text-center text-[10px] text-gray-400 pt-8 pb-2 border-t border-gray-100 mt-6">
                 Money Tracker App v1.0.0. Developed by Handy
@@ -469,7 +498,36 @@
                 <button onclick="saveBudget()" class="w-full gradient-green text-white p-3 rounded-xl font-bold text-xs shadow">Simpan Batas Anggaran</button>
             </div>
 
+            <!-- Fitur Pencarian dan Filter Berdasarkan Tahun -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-400">
+                        🔍
+                    </span>
+                    <input type="text" id="budgetSearchInput" oninput="handleBudgetSearch()" placeholder="Cari anggaran..." class="w-full pl-8 pr-3 py-2 bg-white rounded-xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition duration-300">
+                </div>
+                <div class="relative">
+                    <select id="budgetFilterYear" onchange="handleBudgetFilterYear()" class="w-full p-2 pr-8 bg-white rounded-xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 appearance-none cursor-pointer">
+                        <!-- Diisi secara dinamis dengan tahun dari database transaksi -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <div id="budgetList" class="space-y-3"></div>
+
+            <!-- Navigasi Halaman Budget -->
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 text-[10px]">
+                <span id="budgetPageInfo" class="font-bold text-gray-500">Halaman 1 dari 1</span>
+                <div class="flex gap-1">
+                    <button onclick="changeBudgetPage(-1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">◀</button>
+                    <button onclick="changeBudgetPage(1)" class="px-2.5 py-1.5 bg-white rounded-xl shadow-sm border font-extrabold text-gray-600 hover:bg-gray-50">▶</button>
+                </div>
+            </div>
             
             <div class="text-center text-[10px] text-gray-400 pt-8 pb-2 border-t border-gray-100 mt-6">
                 Money Tracker App v1.0.0. Developed by Handy
@@ -482,9 +540,46 @@
             
             <div class="card p-4 mb-6 space-y-3">
                 <h4 class="text-xs font-extrabold text-gray-400 uppercase tracking-widest" id="reminderFormTitle">Tambah Pengingat Baru</h4>
+                
+                <!-- Input Dropdown Kategori di Atas Nama Tagihan -->
+                <div class="relative">
+                    <select id="reminderCategory" class="w-full p-3 pr-10 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100 appearance-none bg-white cursor-pointer">
+                        <!-- Diisi secara dinamis dengan kategori pengeluaran -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+
                 <input id="reminderName" type="text" placeholder="Nama Tagihan / Pengingat (e.g. Bayar Listrik)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
+                
+                <!-- Input Nominal Tagihan Terformat -->
+                <input id="reminderAmount" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="Nominal Tagihan (Rp)" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
+                
                 <input id="reminderDate" type="date" class="w-full p-3 bg-gray-50 rounded-xl outline-none text-sm text-gray-700 border border-gray-100">
                 <button onclick="saveReminder()" class="w-full gradient-green text-white p-3 rounded-xl font-bold text-xs shadow">Simpan Pengingat</button>
+            </div>
+
+            <!-- Fitur Pencarian dan Filter Berdasarkan Tahun -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-gray-400">
+                        🔍
+                    </span>
+                    <input type="text" id="reminderSearchInput" oninput="handleReminderSearch()" placeholder="Cari tagihan..." class="w-full pl-8 pr-3 py-2 bg-white rounded-xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition duration-300">
+                </div>
+                <div class="relative">
+                    <select id="reminderFilterYear" onchange="handleReminderFilterYear()" class="w-full p-2 pr-8 bg-white rounded-xl text-xs font-semibold outline-none text-gray-700 shadow-sm border border-gray-100 appearance-none cursor-pointer">
+                        <!-- Diisi secara dinamis dengan tahun dari database transaksi -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
             </div>
 
             <div id="reminderList" class="space-y-3"></div>
@@ -677,21 +772,26 @@
                                                 onSuccess({ success: true });
                                             }, 400);
                                         },
-                                        saveReminder: function(id, name, date, status) {
+                                        saveReminder: function(id, name, date, status, category, amount) {
                                             setTimeout(() => {
+                                                const parsedAmount = typeof amount === 'string' ? parseInt(amount.replace(/\D/g, '')) : (parseInt(amount) || 0);
                                                 if (id) {
                                                     const r = reminders.find(rm => rm.id === id);
                                                     if (r) {
                                                         r.nama = name;
                                                         r.tanggal = date;
                                                         r.status = status;
+                                                        r.kategori = category;
+                                                        r.jumlah = parsedAmount;
                                                     }
                                                 } else {
                                                     reminders.push({
                                                         id: "RM" + new Date().getTime(),
                                                         nama: name,
                                                         tanggal: date,
-                                                        status: status
+                                                        status: status,
+                                                        kategori: category,
+                                                        jumlah: parsedAmount
                                                     });
                                                 }
                                                 localStorage.setItem('money_tracker_mock_reminders', JSON.stringify(reminders));
@@ -801,12 +901,11 @@
             if (localReminders) {
                 reminders = JSON.parse(localReminders);
             } else {
-                // Mock data dengan jarak waktu bervariasi dari tanggal hari ini (2026-07-02)
                 reminders = [
-                    { id: "RM1", nama: "Bayar Tagihan Listrik PLN", tanggal: "2026-07-01", status: "Belum" }, // Lewat (Merah)
-                    { id: "RM2", nama: "Cicilan Wifi Indihome", tanggal: "2026-07-04", status: "Belum" }, // Sisa 2 hari (Kuning)
-                    { id: "RM3", nama: "Bayar Kontrakan Tahunan", tanggal: "2026-07-15", status: "Belum" }, // Jauh (Normal)
-                    { id: "RM4", nama: "Beli Token Listrik Cadangan", tanggal: "2026-07-02", status: "Selesai" } // Selesai (Hijau)
+                    { id: "RM1", nama: "Bayar Tagihan Listrik PLN", tanggal: "2026-07-01", status: "Belum", kategori: "Lain-lain", jumlah: 150000 },
+                    { id: "RM2", nama: "Cicilan Wifi Indihome", tanggal: "2026-07-04", status: "Belum", kategori: "Lain-lain", jumlah: 350000 },
+                    { id: "RM3", nama: "Bayar Kontrakan Tahunan", tanggal: "2026-07-15", status: "Belum", kategori: "Sewa Rumah", jumlah: 12000000 },
+                    { id: "RM4", nama: "Beli Token Listrik Cadangan", tanggal: "2026-07-02", status: "Sudah Dibayar", kategori: "Lain-lain", jumlah: 50000 }
                 ];
                 localStorage.setItem('money_tracker_mock_reminders', JSON.stringify(reminders));
             }
@@ -874,6 +973,14 @@
         const reminderItemsPerPage = 5;
         let editReminderId = null;
 
+        // State Pagination Khusus Alokasi Anggaran (Budgets)
+        let budgetCurrentPage = 1;
+        const budgetItemsPerPage = 5;
+
+        // State Pagination Khusus Kantong Tabungan (Pockets)
+        let pocketCurrentPage = 1;
+        const pocketItemsPerPage = 5;
+
         const monthNames = [
             { code: "01", name: "Januari" },
             { code: "02", name: "Februari" },
@@ -928,10 +1035,22 @@
             
             setDefaultDate();
             populateBudgetDropdowns();
+            populateReminderCategoryDropdown();
+            
+            // Mengisi dinamis dropdown filter tahun pada tiga menu terpisah
+            populateYearsDropdown('reminderFilterYear');
+            populateYearsDropdown('budgetFilterYear');
+            populateYearsDropdown('pocketFilterYear');
+
             updateCategories();
             render();
             renderInsights();
             renderMonthlyReport(true);
+            
+            // Reset halaman pagination ke 1 saat pemuatan data sukses
+            pocketCurrentPage = 1;
+            budgetCurrentPage = 1;
+            
             renderPockets();
             renderBudgets();
             renderReminders(true);
@@ -954,6 +1073,7 @@
             console.error(err);
         }
 
+        // Keterangan visibilitas bottom navigation bar
         function updateBottomNavVisibility() {
             const bottomNav = document.getElementById('bottomNav');
             const floatingAddBtn = document.getElementById('floatingAddBtn');
@@ -967,6 +1087,7 @@
             }
         }
 
+        // Inisialisasi Lockscreen PIN
         function triggerLockScreenOnLoad() {
             const pinOverlay = document.getElementById('pinLockScreen');
             if(isPinEnabled && !isUserUnlocked) {
@@ -1161,6 +1282,7 @@
             render();
         }
 
+        // Menggambar Riwayat Transaksi Utama
         function render() {
             const list = document.getElementById('activityList');
             const searchInput = document.getElementById('searchInput');
@@ -1295,6 +1417,7 @@
                         renderCategories();
                         updateCategories();
                         populateBudgetDropdowns();
+                        populateReminderCategoryDropdown();
                         hideLoader();
                         showNotification("Kategori diperbarui!");
                     })
@@ -1308,6 +1431,7 @@
                         renderCategories();
                         updateCategories();
                         populateBudgetDropdowns();
+                        populateReminderCategoryDropdown();
                         hideLoader();
                         showNotification("Kategori ditambahkan!");
                     })
@@ -1332,6 +1456,7 @@
                     renderCategories();
                     updateCategories();
                     populateBudgetDropdowns();
+                    populateReminderCategoryDropdown();
                     hideLoader();
                     showNotification("Kategori dihapus!");
                 })
@@ -1339,11 +1464,61 @@
                 .deleteCategory(type, targetName);
         }
 
+        // Render Kantong Tabungan (Pockets) dengan Dukungan Filter, Pencarian, & Pagination
         function renderPockets() {
             const list = document.getElementById('pocketList');
             list.innerHTML = "";
-            pockets.forEach((p, idx) => {
+
+            const searchInput = document.getElementById('pocketSearchInput');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+            const yearSelect = document.getElementById('pocketFilterYear');
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+
+            const filteredPockets = pockets.filter(p => {
+                const matchesSearch = p.nama.toLowerCase().includes(searchQuery);
+
+                let matchesYear = true;
+                if (selectedYear !== "all") {
+                    // Cari apakah ada transaksi tabungan di seluruh database yang berkaitan dengan nama kantong ini
+                    const hasAnyTransaction = data.some(t => t.nama.toLowerCase().includes(p.nama.toLowerCase()));
+                    if (hasAnyTransaction) {
+                        // Jika ada transaksi, saring berdasarkan tahun berjalan
+                        matchesYear = data.some(t => {
+                            const tYear = t.tanggal ? t.tanggal.split('-')[0] : "";
+                            return tYear === selectedYear && t.nama.toLowerCase().includes(p.nama.toLowerCase());
+                        });
+                    } else {
+                        // Jika tidak ada transaksi sama sekali (misal kantong baru), tetap tampilkan agar tidak hilang dari tabel
+                        matchesYear = true;
+                    }
+                }
+
+                return matchesSearch && matchesYear;
+            });
+
+            const totalPages = Math.ceil(filteredPockets.length / pocketItemsPerPage) || 1;
+            if (pocketCurrentPage < 1) pocketCurrentPage = 1;
+            if (pocketCurrentPage > totalPages) pocketCurrentPage = totalPages;
+
+            const startIndex = (pocketCurrentPage - 1) * pocketItemsPerPage;
+            const endIndex = startIndex + pocketItemsPerPage;
+            const paginatedPockets = filteredPockets.slice(startIndex, endIndex);
+
+            if (paginatedPockets.length === 0) {
+                list.innerHTML = `
+                    <div class="card p-6 text-center text-gray-400 text-xs">
+                        Tidak ada kantong tabungan yang cocok atau aktif di periode ini 💼
+                    </div>
+                `;
+                document.getElementById('pocketPageInfo').innerText = `Halaman 1 dari 1`;
+                return;
+            }
+
+            paginatedPockets.forEach((p) => {
                 const ratio = Math.min(100, Math.round((p.terkumpul / p.target) * 100));
+                const originalIndex = pockets.findIndex(item => item.id === p.id);
+
                 list.innerHTML += `
                     <div class="card p-4 space-y-3">
                         <div class="flex justify-between items-start">
@@ -1359,13 +1534,46 @@
                         <div class="flex justify-between items-center pt-1 text-[11px]">
                             <span class="text-gray-500 font-semibold">Terkumpul: Rp ${p.terkumpul.toLocaleString('id-ID')}</span>
                             <div class="flex gap-2.5">
-                                <button onclick="editPocket(${idx})" class="text-blue-500 font-extrabold">Edit</button>
-                                <button onclick="deletePocket(${idx})" class="text-red-500 font-extrabold">Hapus</button>
+                                <button onclick="editPocket(${originalIndex})" class="text-blue-500 font-extrabold">Edit</button>
+                                <button onclick="deletePocket(${originalIndex})" class="text-red-500 font-extrabold">Hapus</button>
                             </div>
                         </div>
                     </div>
                 `;
             });
+
+            document.getElementById('pocketPageInfo').innerText = `Halaman ${pocketCurrentPage} dari ${totalPages}`;
+        }
+
+        // Mengubah Halaman Pagination Kantong Tabungan
+        function changePocketPage(direction) {
+            const searchInput = document.getElementById('pocketSearchInput');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const yearSelect = document.getElementById('pocketFilterYear');
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+
+            const filteredPockets = pockets.filter(p => {
+                const matchesSearch = p.nama.toLowerCase().includes(searchQuery);
+                let matchesYear = true;
+                if (selectedYear !== "all") {
+                    const hasAnyTransaction = data.some(t => t.nama.toLowerCase().includes(p.nama.toLowerCase()));
+                    if (hasAnyTransaction) {
+                        matchesYear = data.some(t => {
+                            const tYear = t.tanggal ? t.tanggal.split('-')[0] : "";
+                            return tYear === selectedYear && t.nama.toLowerCase().includes(p.nama.toLowerCase());
+                        });
+                    } else {
+                        matchesYear = true;
+                    }
+                }
+                return matchesSearch && matchesYear;
+            });
+
+            const totalPages = Math.ceil(filteredPockets.length / pocketItemsPerPage) || 1;
+            pocketCurrentPage += direction;
+            if (pocketCurrentPage < 1) pocketCurrentPage = 1;
+            if (pocketCurrentPage > totalPages) pocketCurrentPage = totalPages;
+            renderPockets();
         }
 
         function savePocket() {
@@ -1419,6 +1627,76 @@
             }
         }
 
+        // Dropdown kategori khusus untuk form reminder pengeluaran terencana
+        function populateReminderCategoryDropdown() {
+            const select = document.getElementById('reminderCategory');
+            if (select && categories && categories.Pengeluaran) {
+                // Dropdown ini akan otomatis merender daftar kategori pengeluaran terbaru
+                select.innerHTML = categories.Pengeluaran.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+        }
+
+        // Fungsi Konsolidasi Dropdown Tahun Dinamis dari database transaksi
+        function populateYearsDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+
+            const years = new Set();
+            const currentYear = new Date().getFullYear();
+            years.add(currentYear);
+
+            // Ambil seluruh tahun unik dari database transaksi (data)
+            data.forEach(t => {
+                if (t.tanggal) {
+                    const year = t.tanggal.split('-')[0];
+                    if (year && !isNaN(year)) {
+                        years.add(parseInt(year));
+                    }
+                }
+            });
+
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+            let optionsHtml = `<option value="all">Semua Tahun</option>`;
+            sortedYears.forEach(y => {
+                const selected = y === currentYear ? 'selected' : '';
+                optionsHtml += `<option value="${y}" ${selected}>Tahun ${y}</option>`;
+            });
+
+            select.innerHTML = optionsHtml;
+        }
+
+        function handleReminderSearch() {
+            reminderCurrentPage = 1;
+            renderReminders(false);
+        }
+
+        // Mengubah Pencarian dan Reset ke Halaman Pertama
+        function handleReminderFilterYear() {
+            reminderCurrentPage = 1;
+            renderReminders(false);
+        }
+
+        function handleBudgetSearch() {
+            budgetCurrentPage = 1;
+            renderBudgets();
+        }
+
+        function handleBudgetFilterYear() {
+            budgetCurrentPage = 1;
+            renderBudgets();
+        }
+
+        function handlePocketSearch() {
+            pocketCurrentPage = 1;
+            renderPockets();
+        }
+
+        function handlePocketFilterYear() {
+            pocketCurrentPage = 1;
+            renderPockets();
+        }
+
         function resetInsightAndRender() {
             insightCurrentPage = 1;
             const searchInput = document.getElementById('insightSearchInput');
@@ -1438,6 +1716,19 @@
             renderInsights(false);
         }
 
+        // Mengambil Total Pengeluaran Anggaran per Tahun / Bulan Dinamis
+        function getCategoryTotalExpenseForBudget(catName, selectedYear) {
+            const activeMonth = document.getElementById('filterMonth').value;
+
+            return data.filter(t => {
+                if (t.type !== 'Pengeluaran' || t.kategori !== catName) return false;
+                const parts = t.tanggal.split('-');
+                const matchesMonth = parts[1] === activeMonth;
+                const matchesYear = selectedYear === 'all' || parts[0] === selectedYear;
+                return matchesMonth && matchesYear;
+            }).reduce((acc, curr) => acc + curr.jumlah, 0);
+        }
+
         function getCategoryTotalExpense(catName) {
             const activeMonth = document.getElementById('filterMonth').value;
             const activeYear = document.getElementById('filterYear').value;
@@ -1448,15 +1739,47 @@
             }).reduce((acc, curr) => acc + curr.jumlah, 0);
         }
 
+        // Render Alokasi Anggaran (Budgets) dengan Dukungan Filter, Pencarian, & Pagination 5 Data
         function renderBudgets() {
             const list = document.getElementById('budgetList');
             list.innerHTML = "";
-            budgets.forEach((b, idx) => {
-                const currentSpent = getCategoryTotalExpense(b.kategori);
+
+            const searchInput = document.getElementById('budgetSearchInput');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+            const yearSelect = document.getElementById('budgetFilterYear');
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+
+            const filteredBudgets = budgets.filter(b => {
+                return b.kategori.toLowerCase().includes(searchQuery);
+            });
+
+            const totalPages = Math.ceil(filteredBudgets.length / budgetItemsPerPage) || 1;
+            if (budgetCurrentPage < 1) budgetCurrentPage = 1;
+            if (budgetCurrentPage > totalPages) budgetCurrentPage = totalPages;
+
+            const startIndex = (budgetCurrentPage - 1) * budgetItemsPerPage;
+            const endIndex = startIndex + budgetItemsPerPage;
+            const paginatedBudgets = filteredBudgets.slice(startIndex, endIndex);
+
+            if (paginatedBudgets.length === 0) {
+                list.innerHTML = `
+                    <div class="card p-6 text-center text-gray-400 text-xs">
+                        Tidak ada alokasi anggaran yang cocok atau terdaftar 🎯
+                    </div>
+                `;
+                document.getElementById('budgetPageInfo').innerText = `Halaman 1 dari 1`;
+                return;
+            }
+
+            paginatedBudgets.forEach((b) => {
+                const currentSpent = getCategoryTotalExpenseForBudget(b.kategori, selectedYear);
                 const ratio = Math.min(100, b.limit > 0 ? Math.round((currentSpent / b.limit) * 100) : 0);
                 const isOverBudget = currentSpent > b.limit;
                 const barColor = isOverBudget ? 'bg-red-500' : 'bg-emerald-500';
                 const statusColor = isOverBudget ? 'text-red-600 bg-red-50' : 'text-emerald-600 bg-emerald-50';
+
+                const originalIndex = budgets.findIndex(item => item.kategori === b.kategori);
 
                 list.innerHTML += `
                     <div class="card p-4 space-y-3">
@@ -1473,15 +1796,32 @@
                             <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${ratio}%"></div>
                         </div>
                         <div class="flex justify-between items-center pt-1 text-[11px]">
-                            <span class="text-gray-500 font-semibold">Telah Terpakai (Bulan Ini): Rp ${currentSpent.toLocaleString('id-ID')}</span>
+                            <span class="text-gray-500 font-semibold">Telah Terpakai: Rp ${currentSpent.toLocaleString('id-ID')}</span>
                             <div class="flex gap-2.5">
-                                <button onclick="editBudget(${idx})" class="text-blue-500 font-extrabold">Edit</button>
-                                <button onclick="deleteBudget(${idx})" class="text-red-500 font-extrabold">Hapus</button>
+                                <button onclick="editBudget(${originalIndex})" class="text-blue-500 font-extrabold">Edit</button>
+                                <button onclick="deleteBudget(${originalIndex})" class="text-red-500 font-extrabold">Hapus</button>
                             </div>
                         </div>
                     </div>
                 `;
             });
+
+            document.getElementById('budgetPageInfo').innerText = `Halaman ${budgetCurrentPage} dari ${totalPages}`;
+        }
+
+        // Mengubah Halaman Pagination Alokasi Anggaran
+        function changeBudgetPage(direction) {
+            const searchInput = document.getElementById('budgetSearchInput');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const filteredBudgets = budgets.filter(b => {
+                return b.kategori.toLowerCase().includes(searchQuery);
+            });
+
+            const totalPages = Math.ceil(filteredBudgets.length / budgetItemsPerPage) || 1;
+            budgetCurrentPage += direction;
+            if (budgetCurrentPage < 1) budgetCurrentPage = 1;
+            if (budgetCurrentPage > totalPages) budgetCurrentPage = totalPages;
+            renderBudgets();
         }
 
         function saveBudget() {
@@ -1532,7 +1872,28 @@
             const list = document.getElementById('reminderList');
             if (!list) return;
 
-            const totalPages = Math.ceil(reminders.length / reminderItemsPerPage) || 1;
+            // Ambil filter query & filter tahun
+            const searchInput = document.getElementById('reminderSearchInput');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+            const yearSelect = document.getElementById('reminderFilterYear');
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+
+            // Lakukan penyaringan (filtering) data pengingat
+            const filteredReminders = reminders.filter(r => {
+                const matchesSearch = r.nama.toLowerCase().includes(searchQuery) || 
+                                      (r.kategori && r.kategori.toLowerCase().includes(searchQuery));
+                
+                let matchesYear = true;
+                if (selectedYear !== "all") {
+                    const rYear = r.tanggal ? r.tanggal.split('-')[0] : "";
+                    matchesYear = (rYear === selectedYear);
+                }
+
+                return matchesSearch && matchesYear;
+            });
+
+            const totalPages = Math.ceil(filteredReminders.length / reminderItemsPerPage) || 1;
             if (reminderCurrentPage < 1) reminderCurrentPage = 1;
             if (reminderCurrentPage > totalPages) reminderCurrentPage = totalPages;
 
@@ -1540,7 +1901,7 @@
             const endIndex = startIndex + reminderItemsPerPage;
             
             // Urutkan Reminder: Yang Belum dilaksanakan ditaruh paling atas, disusul tanggal terdekat
-            const sortedReminders = [...reminders].sort((a, b) => {
+            const sortedReminders = [...filteredReminders].sort((a, b) => {
                 if (a.status !== b.status) {
                     return a.status === 'Belum' ? -1 : 1;
                 }
@@ -1552,7 +1913,7 @@
             if (paginatedReminders.length === 0) {
                 list.innerHTML = `
                     <div class="card p-6 text-center text-gray-400 text-xs">
-                        Tidak ada pengingat transaksi terencana 🔔
+                        Tidak ada pengingat transaksi yang cocok atau terencana 🔔
                     </div>
                 `;
                 document.getElementById('reminderPageInfo').innerText = `Halaman 1 dari 1`;
@@ -1563,7 +1924,7 @@
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            list.innerHTML = paginatedReminders.map((r, idx) => {
+            list.innerHTML = paginatedReminders.map((r) => {
                 const targetDate = new Date(r.tanggal);
                 targetDate.setHours(0,0,0,0);
 
@@ -1574,11 +1935,11 @@
                 let badgeHtml = "";
                 let nameStyle = "text-gray-800";
 
-                if (r.status === 'Selesai') {
+                if (r.status === 'Sudah Dibayar') {
                     // Warna Hijau jika sudah dilaksanakan
                     cardBgClass = "bg-emerald-50/70 border-emerald-200";
                     nameStyle = "text-gray-400 line-through font-semibold";
-                    badgeHtml = `<span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Selesai ✔️</span>`;
+                    badgeHtml = `<span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Sudah Dibayar ✔️</span>`;
                 } else {
                     if (diffDays < 0) {
                         // Merah jika terlambat (lintas bulan / hari kemarin)
@@ -1604,14 +1965,26 @@
                                 <span class="text-[10px] text-gray-400 font-bold">${r.tanggal}</span>
                             </div>
                             <h4 class="text-xs ${nameStyle} truncate">${r.nama}</h4>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-bold">${r.kategori || 'Pengeluaran'}</span>
+                                <span class="text-[10px] text-gray-700 font-extrabold">Rp ${(r.jumlah || 0).toLocaleString('id-ID')}</span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            <!-- Tombol Centang untuk Verifikasi Selesai -->
-                            <button onclick="toggleVerifyReminder('${r.id}', '${r.status}')" 
-                                    class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${r.status === 'Selesai' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-emerald-100 hover:text-emerald-700'} transition duration-150"
-                                    title="${r.status === 'Selesai' ? 'Kembalikan ke belum' : 'Tandai sudah dilaksanakan'}">
-                                ✓
-                            </button>
+                            <!-- Tombol Bayar / Verifikasi Centang -->
+                            ${r.status !== 'Sudah Dibayar' ? `
+                                <button onclick="toggleVerifyReminder('${r.id}', '${r.status}')" 
+                                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition duration-150 shadow-sm"
+                                        title="Tandai Sudah Dibayar">
+                                    Bayar
+                                </button>
+                            ` : `
+                                <button onclick="toggleVerifyReminder('${r.id}', '${r.status}')" 
+                                        class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm"
+                                        title="Kembalikan ke belum bayar">
+                                    ✓
+                                </button>
+                            `}
                             <!-- Tombol Edit -->
                             <button onclick="editReminder('${r.id}')" class="text-blue-500 font-extrabold text-[11px] p-1.5 hover:underline">Edit</button>
                             <!-- Tombol Hapus -->
@@ -1634,7 +2007,7 @@
 
             // Filter reminder belum diverifikasi yang statusnya terlambat atau mendekati (diffDays <= 3)
             const pendingUrgent = reminders.filter(r => {
-                if (r.status !== 'Belum') return false;
+                if (r.status === 'Sudah Dibayar') return false;
                 const targetDate = new Date(r.tanggal);
                 targetDate.setHours(0,0,0,0);
                 const diffTime = targetDate - today;
@@ -1684,9 +2057,9 @@
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            // Ambil reminder yang 'Belum' dan statusnya Overdue atau Mendekati (<= 3 hari)
+            // Ambil reminder yang bukan 'Sudah Dibayar' dan statusnya Overdue atau Mendekati (<= 3 hari)
             const urgentReminders = reminders.filter(r => {
-                if (r.status !== 'Belum') return false;
+                if (r.status === 'Sudah Dibayar') return false;
                 const targetDate = new Date(r.tanggal);
                 targetDate.setHours(0,0,0,0);
                 const diffTime = targetDate - today;
@@ -1712,9 +2085,9 @@
                         <div class="min-w-0 flex-1 pr-2">
                             <span class="px-1.5 py-0.5 rounded-md font-bold text-[8px] uppercase ${statusColor}">${statusLabel}</span>
                             <h4 class="font-bold text-gray-800 truncate mt-1">${r.nama}</h4>
-                            <p class="text-[9px] text-gray-400 font-semibold mt-0.5">Rencana: ${r.tanggal}</p>
+                            <p class="text-[9px] text-gray-400 font-semibold mt-0.5">Rencana: ${r.tanggal} (Rp ${(r.jumlah || 0).toLocaleString('id-ID')})</p>
                         </div>
-                        <button onclick="verifyReminderFromPopup('${r.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold w-7 h-7 rounded-full flex items-center justify-center shadow-sm shrink-0" title="Verifikasi Selesai">
+                        <button onclick="verifyReminderFromPopup('${r.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold w-7 h-7 rounded-full flex items-center justify-center shadow-sm shrink-0" title="Bayar Sekarang">
                             ✓
                         </button>
                     </div>
@@ -1737,22 +2110,44 @@
         }
 
         function changeReminderPage(direction) {
-            const totalPages = Math.ceil(reminders.length / reminderItemsPerPage) || 1;
+            const searchInput = document.getElementById('reminderSearchInput');
+            const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const yearSelect = document.getElementById('reminderFilterYear');
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+
+            const filteredReminders = reminders.filter(r => {
+                const matchesSearch = r.nama.toLowerCase().includes(searchQuery) || 
+                                      (r.kategori && r.kategori.toLowerCase().includes(searchQuery));
+                let matchesYear = true;
+                if (selectedYear !== "all") {
+                    const rYear = r.tanggal ? r.tanggal.split('-')[0] : "";
+                    matchesYear = (rYear === selectedYear);
+                }
+                return matchesSearch && matchesYear;
+            });
+
+            const totalPages = Math.ceil(filteredReminders.length / reminderItemsPerPage) || 1;
             reminderCurrentPage += direction;
             if (reminderCurrentPage < 1) reminderCurrentPage = 1;
             if (reminderCurrentPage > totalPages) reminderCurrentPage = totalPages;
             renderReminders(false);
         }
 
-        // Simpan atau Edit Reminder
+        // Simpan atau Edit Reminder (Pengingat)
         function saveReminder() {
+            const categorySelect = document.getElementById('reminderCategory');
+            const category = categorySelect ? (categorySelect.value || 'Lain-running') : 'Lain-lain';
             const name = document.getElementById('reminderName').value.trim();
+            const amountRaw = document.getElementById('reminderAmount').value;
             const date = document.getElementById('reminderDate').value;
 
-            if (!name || !date) {
-                showNotification("Nama dan tanggal pengingat wajib diisi!", true);
+            if (!name || !date || !amountRaw) {
+                showNotification("Semua kolom pengingat wajib diisi!", true);
                 return;
             }
+
+            // Membersihkan semua karakter non-angka agar parsing aman ke integer murni
+            const amount = parseInt(amountRaw.replace(/\D/g, '')) || 0;
 
             let status = "Belum";
             if (editReminderId) {
@@ -1761,9 +2156,12 @@
             }
 
             showLoader("Menyimpan pengingat transaksi...");
+            
+            // Validasi pengiriman semua 6 argumen ke backend Google Apps Script
             google.script.run
                 .withSuccessHandler(() => {
                     document.getElementById('reminderName').value = "";
+                    document.getElementById('reminderAmount').value = "";
                     document.getElementById('reminderDate').value = "";
                     editReminderId = null;
                     document.getElementById('reminderFormTitle').innerText = "Tambah Pengingat Baru";
@@ -1771,35 +2169,62 @@
                     showNotification("Pengingat berhasil disimpan!");
                 })
                 .withFailureHandler(onGASFailure)
-                .saveReminder(editReminderId, name, date, status);
+                .saveReminder(editReminderId, name, date, status, category, amount);
         }
 
         // Edit Reminder
         function editReminder(id) {
             const r = reminders.find(rm => rm.id === id);
             if (!r) return;
+            
+            const categorySelect = document.getElementById('reminderCategory');
+            if (categorySelect) {
+                categorySelect.value = r.kategori || (categories.Pengeluaran ? categories.Pengeluaran[0] : 'Lain-lain');
+            }
+            
             document.getElementById('reminderName').value = r.nama;
+            document.getElementById('reminderAmount').value = (r.jumlah || 0).toLocaleString('id-ID');
             document.getElementById('reminderDate').value = r.tanggal;
             editReminderId = r.id;
             document.getElementById('reminderFormTitle').innerText = "Edit Pengingat Transaksi";
-            // Auto scroll form agar terlihat langsung
+            
+            // Auto scroll form agar terlihat langsung oleh pengguna
             document.getElementById('reminderFormTitle').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Verifikasi Centang (Toggle Selesai / Belum)
+        // Verifikasi Centang (Status "Sudah Dibayar" & Masuk ke Riwayat Pengeluaran)
         function toggleVerifyReminder(id, currentStatus) {
             const r = reminders.find(rm => rm.id === id);
             if (!r) return;
 
-            const newStatus = currentStatus === "Selesai" ? "Belum" : "Selesai";
+            const newStatus = currentStatus === "Sudah Dibayar" ? "Belum" : "Sudah Dibayar";
             showLoader("Memperbarui verifikasi pengingat...");
-            google.script.run
-                .withSuccessHandler(() => {
-                    refreshDataFromSheet();
-                    showNotification(newStatus === "Selesai" ? "Transaksi terencana diverifikasi selesai! ✔️" : "Pengingat dikembalikan ke belum bayar.");
-                })
-                .withFailureHandler(onGASFailure)
-                .saveReminder(r.id, r.nama, r.tanggal, newStatus);
+
+            if (newStatus === "Sudah Dibayar") {
+                // 1. Catat sebagai Transaksi Pengeluaran terlebih dahulu agar Saldo Utama berkurang
+                google.script.run
+                    .withSuccessHandler(() => {
+                        // 2. Ubah status pengingat ke "Sudah Dibayar" setelah transaksi sukses dicatat
+                        google.script.run
+                            .withSuccessHandler(() => {
+                                refreshDataFromSheet();
+                                showNotification("Tagihan didebet & dicatat sebagai pengeluaran! ✔️");
+                            })
+                            .withFailureHandler(onGASFailure)
+                            .saveReminder(r.id, r.nama, r.tanggal, newStatus, r.kategori, (r.jumlah || 0));
+                    })
+                    .withFailureHandler(onGASFailure)
+                    .addTransaction(r.tanggal, r.kategori, (r.jumlah || 0), "Pengeluaran", `Bayar: ${r.nama}`);
+            } else {
+                // Hanya ubah status kembali ke Belum
+                google.script.run
+                    .withSuccessHandler(() => {
+                        refreshDataFromSheet();
+                        showNotification("Pengingat dikembalikan ke belum bayar.");
+                    })
+                    .withFailureHandler(onGASFailure)
+                    .saveReminder(r.id, r.nama, r.tanggal, newStatus, r.kategori, (r.jumlah || 0));
+            }
         }
 
         // Hapus Reminder
@@ -1820,14 +2245,17 @@
                 renderInsights();
                 renderMonthlyReport(true);
             } else if (id === 'pocketView') {
+                pocketCurrentPage = 1;
                 renderPockets();
             } else if (id === 'budgetView') {
+                budgetCurrentPage = 1;
                 renderBudgets();
             } else if (id === 'reminderView') {
                 renderReminders(true);
             }
         }
 
+        // Memperbarui kategori formulir input
         function updateCategories() {
             const selectedType = document.querySelector('input[name="jenis"]:checked').value;
             const selectEl = document.getElementById('kategori');
@@ -1879,7 +2307,7 @@
             showNotification(explanation);
         }
 
-        // Render Analisis & Laporan Insight
+        // Render Laporan Analisis & Rasio
         function renderInsights(resetPage = true) {
             if (resetPage) {
                 insightCurrentPage = 1;
@@ -1915,7 +2343,7 @@
             let overallOut = 0;
             data.forEach(t => {
                 if (t.type === 'Pemasukan') overallIn += t.jumlah;
-                else if (t.type === 'Pengeluaran') overallOut += t.jumlah;
+                else if (t.type === 'Pengeluaran') overallOut += t.growth || t.jumlah;
             });
             const overallNet = overallIn - overallOut;
             const totalSaldoElement = document.getElementById('headerTotalSaldo');
@@ -2027,7 +2455,7 @@
             renderMonthlyReport(false);
         }
 
-        // Menangani Pencarian Bulanan
+        // Menangani Pencarian Laporan Bulanan
         function handleMonthlyReportSearch() {
             monthlyReportCurrentPage = 1;
             renderMonthlyReport(false);
@@ -2101,6 +2529,7 @@
             document.getElementById('monthlyReportPageInfo').innerText = `Halaman ${monthlyReportCurrentPage} dari ${totalPages}`;
         }
 
+        // Render diagram donat pengeluaran utama
         function renderDoughnutChart() {
             const expTotals = {};
             let totalExp = 0;
